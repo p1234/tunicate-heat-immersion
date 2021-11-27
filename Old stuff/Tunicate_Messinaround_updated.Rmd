@@ -302,8 +302,8 @@ check_model(mod_changeweightv2)
 
 Stats for Mold Cover
 ```{r}
-fitDist(mold_cover, data = tunidata, type = "binom", try.gamlss = T)
-#family = BI (binomial)
+fitDist(mold_cover, data = tunidata, type = "realline" , try.gamlss = T)
+
 
 tuni_data1 = tuni_data %>%
   select(-c(final_weight_g...12, initial_blue))
