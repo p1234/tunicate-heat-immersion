@@ -21,13 +21,21 @@ Put in table of contents here
 library(tidyverse)
 library(cowplot)
 library(ggplot2)
+library(here)
 ```
+
+### Reading in Data
+
+```{r}
+tunidata <- read.csv("tunicate_master.csv")
+```
+
 
 ### Mold Cover
 
 Displaying the data as a proportion of overall score with given mold cover scores
 ```{r}
-tuni_stacked = tunibby %>%
+tuni_stacked = tunidata %>%
   group_by(mold_cover, temperature_c, water_type) %>%
   summarise(frequency = n())%>%
   mutate(temperature_c=  as.factor(temperature_c))
