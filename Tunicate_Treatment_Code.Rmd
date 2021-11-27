@@ -122,3 +122,35 @@ check_model(mod_changeweightv2)
 
 ```
 
+Stats for Survival
+```{r}
+shapiro.test(tuni_data1$survival)
+#p-value = 2.046e-15
+
+fitDist(survival, data = tuni_data1, type = "binom", try.gamlss = T)
+#family = BI (binomial)
+
+mod_survival <- gamlss(survival ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s + random(as.factor(colony_id)), family = BI, data = tuni_data1)
+summary(mod_survival)
+
+
+step.modsurvival <- stepAIC(mod_survival, direction = "backward", trace = F)
+summary(step.modsurvival)
+formula(step.modsurvival)
+
+#survival ~ temperature_c
+
+#since temperature is the only explanatory variable - thus we can use Kruskal-Wallis Test to see p-values comparing temperatures to controls
+library(FSA)
+dunnTest(survival ~ temperature_c, data = tuni_data1)
+#Comparison        Z      P.unadj        P.adj
+#1    12 - 50 2.481097 1.309786e-02 0.0523914356
+#2    12 - 70 4.135162 3.547039e-05 0.0002128223
+#3    50 - 70 1.654065 9.811432e-02 0.2943429727
+#4    12 - 90 4.135162 3.547039e-05 0.0001773519
+#5    50 - 90 1.654065 9.811432e-02 0.1962286485
+#6    70 - 90 0.000000 1.000000e+00 1.0000000000
+
+#p-value for 12-90 and 12-70 is significant!
+```
+
