@@ -1,0 +1,45 @@
+---
+title: "Temperature and Freshwater as Methods for Controlling D. Vexillum Biofouling"
+author: "Payton Arthur, Haze de Haas, Lauren Gill"
+date: "27/11/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Abstract
+Paste abstract in here
+
+## Contents
+Put in table of contents here
+
+## Libraries
+
+```{r setup, echo=FALSE, warning=FALSE}
+library(tidyverse)
+library(cowplot)
+library(ggplot2)
+```
+
+### Mold Cover
+
+Displaying the data as a proportion of overall score with given mold cover scores
+```{r}
+tuni_stacked = tunibby %>%
+  group_by(mold_cover, temperature_c, water_type) %>%
+  summarise(frequency = n())%>%
+  mutate(temperature_c=  as.factor(temperature_c))
+```
+
+Stacked bar graphs showing mold cover
+```{r}
+ggplot(tuni_stacked, aes(y = frequency, x = temperature_c, fill = as.factor(mold_cover))) +
+  geom_bar(stat = "identity", position = "fill") +
+  facet_grid(. ~ water_type) +
+  labs(x ="Temperature (°C)", y = "Frequency")+
+  scale_fill_brewer(palette = "Oranges", direction=1) +
+  labs(fill = "Mold Cover") +
+  theme_cowplot()
+```
