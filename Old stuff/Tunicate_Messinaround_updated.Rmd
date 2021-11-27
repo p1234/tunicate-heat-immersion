@@ -300,3 +300,22 @@ check_model(mod_changeweightv2)
 
 ```
 
+Stats for Mold Cover
+```{r}
+fitDist(mold_cover, data = tunidata, type = "realline" , try.gamlss = T)
+
+
+tuni_data1 = tuni_data %>%
+  select(-c(final_weight_g...12, initial_blue))
+
+mod <- gamlss(attachment ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s, family = BI, data = tuni_data1)
+summary(mod)
+
+step.mod <- stepAIC(mod, direction = "backward", trace = F)
+summary(step.mod)
+formula(step.mod)
+
+#attachment ~ temperature_c
+
+#nothing significant
+```
