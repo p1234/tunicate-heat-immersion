@@ -94,6 +94,7 @@ testboxplot <- ggplot(test1, aes(x=water_type, y=deltachangergb)) +
 testboxplot
 
 ###Doing a little correlation moment
+library(tidyverse)
 tunibby <- read_delim("tunibby.csv", delim = ',')
 res <- cor.test(tunibby$`48hr_rgb`, tunibby$`survival`, 
                 method = "pearson")
@@ -190,3 +191,20 @@ attachgraph <- ggplot(attach_t, aes(x=temperature_c, y=prop_attach)) + geom_poin
   theme_classic()+
   geom_point(size=2)
 attachgraph
+
+
+
+##Dans graph 
+library(tidyverse)
+library(cowplot)
+tuni_stacked = tunibby %>%
+  group_by(mold_cover, temperature_c, water_type) %>%
+  summarise(frequency = n())%>%
+  mutate(temperature_c=  as.factor(temperature_c))
+
+ggplot(tuni_stacked, aes(y = frequency, x = temperature_c, fill = as.factor(mold_cover))) +
+  geom_bar(stat = "identity", position = "fill") +
+  facet_grid(. ~ water_type) +
+  scale_fill_brewer(palette = "Reds", direction=1) +
+  labs(fill = "Mold Cover") +
+  theme_cowplot()
