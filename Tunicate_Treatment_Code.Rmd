@@ -135,7 +135,7 @@ summary(topmod)
 ```
 
 
-#Change in Weight over 3 Weeks (compare to post-acclimation)
+### Change in Weight over 3 Weeks (compare to post-acclimation)
 
 ```{r}
 tuni_data1 <- tunidata %>% mutate(ChangeWetWeight = final_weight_g-post_acclimation_weight_g)
@@ -180,7 +180,7 @@ summary(mod_changeweightv2)
 
 ```
 
-Stats for Survival
+### Survival
 ```{r}
 #Visualizing Data 
 
