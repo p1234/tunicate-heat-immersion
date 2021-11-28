@@ -109,7 +109,6 @@ ggplot(tuni_stacked, aes(y = frequency, x = temperature_c, fill = as.factor(mold
   theme_cowplot()
 ```
 
-
 Examining mold cover data to find the best distribution
 
 ```{r}
