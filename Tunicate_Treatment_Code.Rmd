@@ -52,7 +52,6 @@ shapiro.test(tunidata$X48hr_rgb)
 ```
 
 Using a linear model for normal distribution - allows you to use random effects and nested effects 
-
 ```{r}
 tunirgb <- tunidata %>% 
   mutate(exposure_time_s = as.factor(exposure_time_s)) %>% 
@@ -236,7 +235,9 @@ dunnTest(survival ~ temperature_c, data = tunidata)
 
 Attachment
 
+
 Data Visualization
+
 ```{r}
 
 ```
