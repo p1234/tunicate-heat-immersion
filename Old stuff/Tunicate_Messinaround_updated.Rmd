@@ -302,13 +302,41 @@ check_model(mod_changeweightv2)
 
 Stats for Mold Cover
 ```{r}
-fitDist(mold_cover, data = tunidata, type = "realline" , try.gamlss = T)
+library(dplyr)
+library(fitdistrplus)
+library(gamlss)
 
+
+mold.aov <- aov(mold_cover ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s, data = tunidata)
+summary(mold.aov)
+
+kruskalTest
+
+descdist(tunidata$mold_cover)
+
+
+fitDist(mold_cover, data = tunidata, type = "realline", try.gamlss = T)
+
+mST1 <- histDist(tunidata$mold_cover, "ST1", density = T, main = "Skew t (Azzalini type 1)")
+mNO <- histDist(tunidata$mold_cover, "NO", density = T, main = "Normal")
+
+GAIC(mST1, mNO)
+
+#df       AIC
+#mST1  4 -743.8242
+#mNO   2  328.7997
+
+
+topmod <- gamlss(mold_cover ~ water_type + temperature_c + exposure_time_s +
+water_type*temperature_c*exposure_time_s + random(as.factor(colony_id)), 
+family = ST1(), data = tunidata)
+
+summary(topmod)
 
 tuni_data1 = tuni_data %>%
   select(-c(final_weight_g...12, initial_blue))
 
-mod <- gamlss(attachment ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s, family = BI, data = tuni_data1)
+mod <- glm(mold_cover ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s, data = tunidata)
 summary(mod)
 
 step.mod <- stepAIC(mod, direction = "backward", trace = F)

@@ -24,10 +24,43 @@ library(ggplot2)
 library(here)
 ```
 
+## Analyses and Graphs
+***
 ### Reading in Data
 
 ```{r}
 tunidata <- read.csv("tunicate_master.csv")
+```
+### Change in mean RGB values
+
+First Check for normality, p-value = 0.3433 normal distribution!
+```{r}
+shapiro.test(tunidata$X48hr_rgb)
+```
+
+Using a linear model for normal distribution - allows you to use random effects and nested effects 
+
+```{r}
+tunirgb <- tunidata %>% 
+  mutate(exposure_time_s = as.factor(exposure_time_s)) %>% 
+  mutate(temperature_c = as.factor(temperature_c))
+
+modrgb <- lm(X48hr_rgb ~ exposure_time_s + water_type + temperature_c + exposure_time_s*water_type*temperature_c + (1|colony_id), family = gaussian, data = tunirgb)
+summary(mod)
+```
+
+Since model is not influenced by random effects, take this out of the model (stepAIC does not work with random effects) and then reduce model 
+
+```{r}
+modrgb <- lm(X48hr_rgb ~ exposure_time_s + water_type + temperature_c + exposure_time_s*water_type*temperature_c, family = gaussian, data = tunirgb)
+stepmodrgb <- stepAIC(modrgb, direction = "backward", trace = F)
+formula(stepmodrgb)
+```
+
+stepAIC has outputted its final, reduced model. Final p values for model output
+```{r}
+newmodrgb <- lm(X48hr_rgb ~ water_type + temperature_c, data = tunirgb)
+summary(newmodrgb)
 ```
 
 
@@ -36,7 +69,7 @@ tunidata <- read.csv("tunicate_master.csv")
 Displaying the data as a proportion of overall score with given mold cover scores
 ```{r}
 tuni_stacked = tunidata %>%
-  group_by(mold_cover, temperature_c, water_type) %>%
+  group_by(mold_cover, temperature_c, water_type, exposure_time_s) %>%
   summarise(frequency = n())%>%
   mutate(temperature_c=  as.factor(temperature_c))
 ```
@@ -45,14 +78,41 @@ Stacked bar graphs showing mold cover
 ```{r}
 ggplot(tuni_stacked, aes(y = frequency, x = temperature_c, fill = as.factor(mold_cover))) +
   geom_bar(stat = "identity", position = "fill") +
-  facet_grid(. ~ water_type) +
+  facet_grid(as.factor(exposure_time_s) ~ water_type) +
   labs(x ="Temperature (°C)", y = "Frequency")+
   scale_fill_brewer(palette = "Oranges", direction=1) +
   labs(fill = "Mold Cover") +
   theme_cowplot()
 ```
 
-Change in Weight over 3 Weeks (compare to post-acclimation)
+
+Examining mold cover data to find the best distribution
+
+```{r}
+descdist(tunidata$mold_cover)
+fitDist(mold_cover, data = tunidata, type = "realline", try.gamlss = T)
+```
+
+Fitdist determined ST1 to be the best distribution, comparing it against a normal distribution to make sure AIC value is lower. AIC value of ST1 = -743.8 while AIC value of normal = 328
+```{r}
+mST1 <- histDist(tunidata$mold_cover, "ST1", density = T, main = "Skew t (Azzalini type 1)")
+mNO <- histDist(tunidata$mold_cover, "NO", density = T, main = "Normal")
+GAIC(mST1, mNO)
+```
+
+
+Now creating a full model, reduced model is the same as full model. No factors are significant
+```{r}
+topmod <- gamlss(mold_cover ~ water_type + temperature_c + exposure_time_s +
+water_type*temperature_c*exposure_time_s + random(as.factor(colony_id)), 
+family = ST1(), data = tunirgb)
+
+summary(topmod)
+```
+
+
+#Change in Weight over 3 Weeks (compare to post-acclimation)
+
 ```{r}
 tuni_data1 <- tuni_data %>% mutate(ChangeWetWeight = final_weight_g-post_acclimation_weight_g)
 
