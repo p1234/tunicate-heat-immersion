@@ -78,7 +78,7 @@ Stacked bar graphs showing mold cover
 ```{r}
 ggplot(tuni_stacked, aes(y = frequency, x = temperature_c, fill = as.factor(mold_cover))) +
   geom_bar(stat = "identity", position = "fill") +
-  facet_grid(. ~ water_type) +
+  facet_grid(as.factor(exposure_time_s) ~ water_type) +
   labs(x ="Temperature (°C)", y = "Frequency")+
   scale_fill_brewer(palette = "Oranges", direction=1) +
   labs(fill = "Mold Cover") +
@@ -98,6 +98,7 @@ mST1 <- histDist(tunidata$mold_cover, "ST1", density = T, main = "Skew t (Azzali
 mNO <- histDist(tunidata$mold_cover, "NO", density = T, main = "Normal")
 GAIC(mST1, mNO)
 ```
+
 
 Now creating a full model, reduced model is the same as full model. No factors are significant
 ```{r}
