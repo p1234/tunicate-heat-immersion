@@ -131,7 +131,7 @@ topmod <- gamlss(mold_cover ~ water_type + temperature_c + exposure_time_s +
 water_type*temperature_c*exposure_time_s + random(as.factor(colony_id)), 
 family = ST1(), data = tunirgb)
 
-summary(topmod)
+step.topmod <- stepGAIC(topmod, direction = "backward", trace = F)
 ```
 
 
