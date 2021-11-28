@@ -76,6 +76,18 @@ newmodrgb <- lm(X48hr_rgb ~ water_type + temperature_c, data = tunirgb)
 summary(newmodrgb)
 ```
 
+Graph
+```{r}
+tunirgb <- tunirgb %>% mutate(deltachangergb = X48hr_rgb-initial_rgb)
+rgbboxplot <- ggplot(tunirgb, aes(x=temperature_c, y=deltachangergb,
+                                 fill = water_type, group = interaction(temperature_c, water_type))) + 
+  geom_boxplot(outlier.shape = NA, alpha = 0.1, width = 0.75) + #ylim(-1,1.5) +
+  geom_jitter(position = position_dodge(width=0.75))+
+  xlab("Temperature (°C)") + ylab("Change in Mean RGB") +
+  theme_classic() + labs(fill = "Water Type")
+rgbboxplot
+```
+
 
 ### Mold Cover
 
@@ -124,7 +136,9 @@ summary(topmod)
 ```
 
 
+
 ###Change in Weight over 3 Weeks (compare to post-acclimation)
+
 
 ```{r}
 tuni_data1 <- tunidata %>% mutate(ChangeWetWeight = final_weight_g-post_acclimation_weight_g)
@@ -169,7 +183,9 @@ summary(mod_changeweightv2)
 
 ```
 
+
 ###Survival
+
 
 Visualizing Data 
 ```{r}
@@ -202,8 +218,10 @@ formula(step.modsurvival)
 #survival ~ temperature_c
 ```
 
+
 since temperature is the only explanatory variable - thus we can use Kruskal-Wallis Test to see p-values comparing temperatures to controls
 ```{r}
+
 dunnTest(survival ~ temperature_c, data = tunidata)
 #Comparison        Z      P.unadj        P.adj
 #1    12 - 50 2.817892 4.834013e-03 1.933605e-02*

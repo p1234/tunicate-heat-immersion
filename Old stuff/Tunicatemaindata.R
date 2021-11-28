@@ -208,3 +208,9 @@ ggplot(tuni_stacked, aes(y = frequency, x = temperature_c, fill = as.factor(mold
   scale_fill_brewer(palette = "Reds", direction=1) +
   labs(fill = "Mold Cover") +
   theme_cowplot()
+
+
+library(survival)
+rgbcox<- coxph(Surv(survival) ~ X48hr_rgb, data=tunidata)    # Cox-PH model
+summary(rgbcox)
+
