@@ -194,7 +194,6 @@ formula(step.modsurvival)
 #survival ~ temperature_c
 
 #since temperature is the only explanatory variable - thus we can use Kruskal-Wallis Test to see p-values comparing temperatures to controls
-library(FSA)
 dunnTest(survival ~ temperature_c, data = tunidata)
 #Comparison        Z      P.unadj        P.adj
 #1    12 - 50 2.817892 4.834013e-03 1.933605e-02*
