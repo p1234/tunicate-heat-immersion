@@ -22,6 +22,14 @@ library(tidyverse)
 library(cowplot)
 library(ggplot2)
 library(here)
+library(tidyr)
+library(performance)
+library(DHARMa)
+library(fitdistrplus)
+library(gamlss)
+library(FSA)
+library(goft)
+library(MASS)
 ```
 
 ## Analyses and Graphs
@@ -30,6 +38,10 @@ library(here)
 
 ```{r}
 tunidata <- read.csv("tunicate_master.csv")
+tunidata$temperature_c <- as.factor(tunidata$temperature_c)
+tunidata$water_type <- as.factor(tunidata$water_type)
+tunidata$exposure_time_s <- as.factor(tunidata$exposure_time_s)
+
 ```
 ### Change in mean RGB values
 
@@ -114,7 +126,7 @@ summary(topmod)
 #Change in Weight over 3 Weeks (compare to post-acclimation)
 
 ```{r}
-tuni_data1 <- tuni_data %>% mutate(ChangeWetWeight = final_weight_g-post_acclimation_weight_g)
+tuni_data1 <- tunidata %>% mutate(ChangeWetWeight = final_weight_g-post_acclimation_weight_g)
 
 #Visualizing Data
 
@@ -158,17 +170,24 @@ summary(mod_changeweightv2)
 
 Stats for Survival
 ```{r}
-shapiro.test(tuni_data1$survival)
-#p-value = 2.046e-15
+#Visualizing Data 
 
-fitDist(survival, data = tuni_data1, type = "binom", try.gamlss = T)
+
+
+#Testing for Normality
+shapiro.test(tunidata$survival)
+#p-value = 2.047e-15
+
+#Checking Distribution
+fitDist(survival, data = tunidata, type = "binom", try.gamlss = T)
 #family = BI (binomial)
 
-mod_survival <- gamlss(survival ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s + random(as.factor(colony_id)), family = BI, data = tuni_data1)
+#GAMLSS model 
+mod_survival <- gamlss(survival ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s + random(as.factor(colony_id)), family = BI, data = tunidata)
 summary(mod_survival)
 
-
-step.modsurvival <- stepAIC(mod_survival, direction = "backward", trace = F)
+#Model Selection
+step.modsurvival <- stepGAIC(mod_survival, direction = "backward", trace = F)
 summary(step.modsurvival)
 formula(step.modsurvival)
 
@@ -176,14 +195,14 @@ formula(step.modsurvival)
 
 #since temperature is the only explanatory variable - thus we can use Kruskal-Wallis Test to see p-values comparing temperatures to controls
 library(FSA)
-dunnTest(survival ~ temperature_c, data = tuni_data1)
+dunnTest(survival ~ temperature_c, data = tunidata)
 #Comparison        Z      P.unadj        P.adj
-#1    12 - 50 2.481097 1.309786e-02 0.0523914356
-#2    12 - 70 4.135162 3.547039e-05 0.0002128223
-#3    50 - 70 1.654065 9.811432e-02 0.2943429727
-#4    12 - 90 4.135162 3.547039e-05 0.0001773519
-#5    50 - 90 1.654065 9.811432e-02 0.1962286485
-#6    70 - 90 0.000000 1.000000e+00 1.0000000000
+#1    12 - 50 2.817892 4.834013e-03 1.933605e-02*
+#2    12 - 70 4.428115 9.506008e-06 5.703605e-05*
+#3    50 - 70 1.610224 1.073490e-01 3.220471e-01
+#4    12 - 90 4.428115 9.506008e-06 4.753004e-05*
+#5    50 - 90 1.610224 1.073490e-01 2.146980e-01
+#6    70 - 90 0.000000 1.000000e+00 1.000000e+00
 
 #p-value for 12-90 and 12-70 is significant!
 ```
