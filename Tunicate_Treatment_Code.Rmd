@@ -207,3 +207,37 @@ dunnTest(survival ~ temperature_c, data = tunidata)
 #p-value for 12-90 and 12-70 is significant!
 ```
 
+
+Stats for Attachment
+```{r}
+#Data Visualization
+
+
+#Distribution Fitting
+fitDist(attachment, data = tuni_data1, type = "binom", try.gamlss = T)
+#family = BI (binomial)
+
+#GAMLSS Model
+mod <- gamlss(attachment ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s, family = BI, data = tuni_data1)
+summary(mod)
+
+#Model Selection
+step.mod <- stepAIC(mod, direction = "backward", trace = F)
+summary(step.mod)
+formula(step.mod)
+#attachment ~ temperature_c
+
+#since temperature is the only explanatory variable - thus we can use Kruskal-Wallis Test to see p-values comparing temperatures to controls
+
+dunnTest(attachment ~ temperature_c, data = tuni_data1)
+#Comparison        Z      P.unadj        P.adj
+#1    12 - 50 5.018805 5.199384e-07 3.119630e-06*
+#2    12 - 70 5.018805 5.199384e-07 2.599692e-06*
+#3    50 - 70 0.000000 1.000000e+00 1.000000e+00
+#4    12 - 90 5.018805 5.199384e-07 2.079753e-06*
+#5    50 - 90 0.000000 1.000000e+00 1.000000e+00
+#6    70 - 90 0.000000 1.000000e+00 1.000000e+00
+
+#p-value for 12-90, 12-70 and 12-50 are significant
+
+```
