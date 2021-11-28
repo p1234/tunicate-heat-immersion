@@ -85,6 +85,7 @@ ggplot(tuni_stacked, aes(y = frequency, x = temperature_c, fill = as.factor(mold
   theme_cowplot()
 ```
 
+
 Examining mold cover data to find the best distribution
 
 ```{r}
@@ -110,11 +111,12 @@ summary(topmod)
 ```
 
 
-### Change in Weight over 3 Weeks (compare to post-acclimation)
+#Change in Weight over 3 Weeks (compare to post-acclimation)
+
 ```{r}
 tuni_data1 <- tuni_data %>% mutate(ChangeWetWeight = final_weight_g-post_acclimation_weight_g)
 
-#faceting - put temperature, exposure time and water type on figure
+#Visualizing Data
 
 p <- ggplot(tuni_data1, aes(x = exposure_time_s, y = ChangeWetWeight, fill = water_type))+
   labs(x = "Exposure time (s)", y = "Change in wet weight (g)", fill = "Water type")+
@@ -123,53 +125,66 @@ p <- ggplot(tuni_data1, aes(x = exposure_time_s, y = ChangeWetWeight, fill = wat
 
 p + facet_grid(cols = vars(temperature_c))
 
-#plot comparing initial wet weight to 3 week wet weight - multiple plots with patchwork?
-
-
-p1 <- ggplot(tuni_data1, aes(x = exposure_time_s, y = post_acclimation_weight_g, fill = water_type))+
-  labs(x = "Exposure time", y = "initial wet weight (g)", fill = "Water type")+
-  geom_boxplot()
-  
-p11 <- p1 + facet_grid(cols = vars(temperature_c))
-  
-p2 <- ggplot(tuni_data1, aes(x = exposure_time_s, y = final_weight_g, fill = water_type))+
-  labs(x = "Exposure time", y = "final weight weight (g)", fill = "Water type")+
-  geom_boxplot()
-
-p22 <- p2 + facet_grid(cols = vars(temperature_c))
-
-p11 + p22
-
-p11 + p22 + plot_layout(ncol=1)
-
-
 hist(tuni_data1$ChangeWetWeight)
 shapiro.test(tuni_data1$ChangeWetWeight)
 #p-value = 0.7646 thus follows a normal distribution!
 descdist(tuni_data1$ChangeWetWeight)
 
+#Statistics for Change in Weight after 3 Weeks
 
-##Does fitdist work on a distribution with negative numbers?
+#Distribution Fitting
 fitDist(ChangeWetWeight, data = tuni_data1, type = "realline", try.gamlss = T)
+#this also gives normal distribution
 
-
+#Linear Model
 mod_changeweight <- lm(ChangeWetWeight ~ exposure_time_s + water_type + temperature_c + exposure_time_s*water_type*temperature_c, family = gaussian, data = tuni_data1)
 summary(mod_changeweight)
 
+#Model Selection
 step.mod_changeweight <- stepAIC(mod_changeweight, direction = "backward", trace = F)
 summary(step.mod_changeweight)
 formula(step.mod_changeweight)
 
 #ChangeWetWeight ~ water_type + temperature_c + water_type:temperature_c
 
-mod_changeweightv2 <- lm(ChangeWetWeight ~ water_type + temperature_c, family = gaussian, data = tuni_data1)
-summary(mod_changeweightv2)
-
-#significant p-value for temperature_c90 (p=value = 0.0315)
-
-check_model(mod_changeweightv2)
-
+check_model(step.mod_changeweight)
 #check model when water_type:temperature_c was present and had major collinearity issues, thus removed water_type:temperature and check model again and collinearity issues were solved
 
+mod_changeweightv2 <- lm(ChangeWetWeight ~ water_type + temperature_c, family = gaussian, data = tuni_data1)
+summary(mod_changeweightv2)
+#significant p-value for temperature_c90 (p=value = 0.0315)
+
+```
+
+Stats for Survival
+```{r}
+shapiro.test(tuni_data1$survival)
+#p-value = 2.046e-15
+
+fitDist(survival, data = tuni_data1, type = "binom", try.gamlss = T)
+#family = BI (binomial)
+
+mod_survival <- gamlss(survival ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s + random(as.factor(colony_id)), family = BI, data = tuni_data1)
+summary(mod_survival)
+
+
+step.modsurvival <- stepAIC(mod_survival, direction = "backward", trace = F)
+summary(step.modsurvival)
+formula(step.modsurvival)
+
+#survival ~ temperature_c
+
+#since temperature is the only explanatory variable - thus we can use Kruskal-Wallis Test to see p-values comparing temperatures to controls
+library(FSA)
+dunnTest(survival ~ temperature_c, data = tuni_data1)
+#Comparison        Z      P.unadj        P.adj
+#1    12 - 50 2.481097 1.309786e-02 0.0523914356
+#2    12 - 70 4.135162 3.547039e-05 0.0002128223
+#3    50 - 70 1.654065 9.811432e-02 0.2943429727
+#4    12 - 90 4.135162 3.547039e-05 0.0001773519
+#5    50 - 90 1.654065 9.811432e-02 0.1962286485
+#6    70 - 90 0.000000 1.000000e+00 1.0000000000
+
+#p-value for 12-90 and 12-70 is significant!
 ```
 
