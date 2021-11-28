@@ -52,18 +52,11 @@ ggplot(tuni_stacked, aes(y = frequency, x = temperature_c, fill = as.factor(mold
   theme_cowplot()
 ```
 
-this is hazel testing my branch
-```{r}
-#very important code
-```
-=======
-YUHHHHHHHHHHH
-
 Change in Weight over 3 Weeks (compare to post-acclimation)
 ```{r}
 tuni_data1 <- tuni_data %>% mutate(ChangeWetWeight = final_weight_g-post_acclimation_weight_g)
 
-#faceting - put temperature, exposure time and water type on figure
+#Visualizing Data
 
 p <- ggplot(tuni_data1, aes(x = exposure_time_s, y = ChangeWetWeight, fill = water_type))+
   labs(x = "Exposure time (s)", y = "Change in wet weight (g)", fill = "Water type")+
@@ -72,53 +65,34 @@ p <- ggplot(tuni_data1, aes(x = exposure_time_s, y = ChangeWetWeight, fill = wat
 
 p + facet_grid(cols = vars(temperature_c))
 
-#plot comparing initial wet weight to 3 week wet weight - multiple plots with patchwork?
-
-
-p1 <- ggplot(tuni_data1, aes(x = exposure_time_s, y = post_acclimation_weight_g, fill = water_type))+
-  labs(x = "Exposure time", y = "initial wet weight (g)", fill = "Water type")+
-  geom_boxplot()
-  
-p11 <- p1 + facet_grid(cols = vars(temperature_c))
-  
-p2 <- ggplot(tuni_data1, aes(x = exposure_time_s, y = final_weight_g, fill = water_type))+
-  labs(x = "Exposure time", y = "final weight weight (g)", fill = "Water type")+
-  geom_boxplot()
-
-p22 <- p2 + facet_grid(cols = vars(temperature_c))
-
-p11 + p22
-
-p11 + p22 + plot_layout(ncol=1)
-
-
 hist(tuni_data1$ChangeWetWeight)
 shapiro.test(tuni_data1$ChangeWetWeight)
 #p-value = 0.7646 thus follows a normal distribution!
 descdist(tuni_data1$ChangeWetWeight)
 
+#Statistics for Change in Weight after 3 Weeks
 
-##Does fitdist work on a distribution with negative numbers?
+#Distribution Fitting
 fitDist(ChangeWetWeight, data = tuni_data1, type = "realline", try.gamlss = T)
+#this also gives normal distribution
 
-
+#Linear Model
 mod_changeweight <- lm(ChangeWetWeight ~ exposure_time_s + water_type + temperature_c + exposure_time_s*water_type*temperature_c, family = gaussian, data = tuni_data1)
 summary(mod_changeweight)
 
+#Model Selection
 step.mod_changeweight <- stepAIC(mod_changeweight, direction = "backward", trace = F)
 summary(step.mod_changeweight)
 formula(step.mod_changeweight)
 
 #ChangeWetWeight ~ water_type + temperature_c + water_type:temperature_c
 
+check_model(step.mod_changeweight)
+#check model when water_type:temperature_c was present and had major collinearity issues, thus removed water_type:temperature and check model again and collinearity issues were solved
+
 mod_changeweightv2 <- lm(ChangeWetWeight ~ water_type + temperature_c, family = gaussian, data = tuni_data1)
 summary(mod_changeweightv2)
-
 #significant p-value for temperature_c90 (p=value = 0.0315)
-
-check_model(mod_changeweightv2)
-
-#check model when water_type:temperature_c was present and had major collinearity issues, thus removed water_type:temperature and check model again and collinearity issues were solved
 
 ```
 
