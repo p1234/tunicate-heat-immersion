@@ -30,6 +30,7 @@ library(gamlss)
 library(FSA)
 library(goft)
 library(MASS)
+library(ordinal)
 ```
 
 ## Analyses and Graphs
@@ -113,7 +114,9 @@ Examining mold cover data to find the best distribution
 
 ```{r}
 descdist(tunidata$mold_cover)
-fitDist(mold_cover, data = tunidata, type = "realline", try.gamlss = T)
+fit <- fitDist(mold_cover, data = tunidata, type = "realAll", try.gamlss = T)
+fit$fits
+
 ```
 
 Fitdist determined ST1 to be the best distribution, comparing it against a normal distribution to make sure AIC value is lower. AIC value of ST1 = -743.8 while AIC value of normal = 328
@@ -126,13 +129,24 @@ GAIC(mST1, mNO)
 
 Now creating a full model, reduced model is the same as full model. No factors are significant
 ```{r}
-topmod <- gamlss(mold_cover ~ water_type + temperature_c + exposure_time_s +
-water_type*temperature_c*exposure_time_s + random(as.factor(colony_id)), 
-family = ST1(), data = tunirgb)
+tunirgb$colony_id <- as.factor(tunirgb$colony_id)
+tunirgb$mold_cover <- as.factor(tunirgb$mold_cover)
 
-step.topmod <- stepGAIC(topmod, direction = "backward", trace = F)
+ordinalmodfull <- clmm2(mold_cover ~ water_type + temperature_c + exposure_time_s +
+                     exposure_time_s*water_type*temperature_c,
+                     random = colony_id, data = tunirgb, Hess = TRUE)
+summary(ordinalmodfull)
+
+#temperature_c90 p=0.041566
+
 ```
 
+Anova test
+```{r}
+#moldyaov <- aov(mold_cover ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s, data = tunirgb)
+#summary(moldyaov)
+#TukeyHSD(moldyaov)
+```
 
 
 ###Change in Weight over 3 Weeks (compare to post-acclimation)
