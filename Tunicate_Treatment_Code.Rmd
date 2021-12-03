@@ -59,7 +59,7 @@ tunirgb <- tunidata %>%
   mutate(temperature_c = as.factor(temperature_c))
 
 modrgb <- lm(X48hr_rgb ~ exposure_time_s + water_type + temperature_c + exposure_time_s*water_type*temperature_c + (1|colony_id), family = gaussian, data = tunirgb)
-summary(mod)
+summary(modrgb)
 ```
 
 Since model is not influenced by random effects, take this out of the model (stepAIC does not work with random effects) and then reduce model 
