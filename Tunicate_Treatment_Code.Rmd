@@ -78,14 +78,16 @@ summary(newmodrgb)
 
 Graph
 ```{r}
-tunirgb <- tunirgb %>% mutate(deltachangergb = X48hr_rgb-initial_rgb)
-rgbboxplot <- ggplot(tunirgb, aes(x=temperature_c, y=deltachangergb,
-                                 fill = water_type, group = interaction(temperature_c, water_type))) + 
-  geom_boxplot(outlier.shape = NA, alpha = 0.1, width = 0.75) + #ylim(-1,1.5) +
+
+deltachangergb <- ggplot(tunirgb, aes(x = temperature_c, y = deltachangergb, fill = water_type))+
+  labs(x = "Temperature (°C)", y = "Change in Mean RGB", fill = "Water type")+
+#labs(title = "Temperature (°C)")+
   geom_jitter(position = position_dodge(width=0.75))+
-  xlab("Temperature (°C)") + ylab("Change in Mean RGB") +
-  theme_classic() + labs(fill = "Water Type")
-rgbboxplot
+  geom_boxplot(alpha = 0.6)+
+  theme_bw()
+
+ggsave("deltachangergb.jpg")
+
 ```
 
 
@@ -111,7 +113,6 @@ ggplot(tuni_stacked, aes(y = frequency, x = temperature_c, fill = as.factor(mold
 ```
 
 Examining mold cover data to find the best distribution
-
 ```{r}
 descdist(tunidata$mold_cover)
 fit <- fitDist(mold_cover, data = tunidata, type = "realAll", try.gamlss = T)
@@ -160,7 +161,9 @@ tuni_data1 <- tunidata %>% mutate(ChangeWetWeight = final_weight_g-post_acclimat
 p <- ggplot(tuni_data1, aes(x = exposure_time_s, y = ChangeWetWeight, fill = water_type))+
   labs(x = "Exposure time (s)", y = "Change in wet weight (g)", fill = "Water type")+
 #labs(title = "Temperature (°C)")+
-  geom_boxplot()
+  geom_jitter(position = position_dodge(width=0.75))+
+  geom_boxplot(alpha = 0.5)+
+  theme_bw()
 
 p + facet_grid(cols = vars(temperature_c))
 
