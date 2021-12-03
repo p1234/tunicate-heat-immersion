@@ -31,6 +31,7 @@ library(gamlss)
 library(FSA)
 library(goft)
 library(MASS)
+library(ordinal)
 ```
 
 ## Analyses and Graphs
@@ -59,7 +60,7 @@ tunirgb <- tunidata %>%
   mutate(temperature_c = as.factor(temperature_c))
 
 modrgb <- lm(X48hr_rgb ~ exposure_time_s + water_type + temperature_c + exposure_time_s*water_type*temperature_c + (1|colony_id), family = gaussian, data = tunirgb)
-summary(mod)
+summary(modrgb)
 ```
 
 Since model is not influenced by random effects, take this out of the model (stepAIC does not work with random effects) and then reduce model 
@@ -112,11 +113,12 @@ ggplot(tuni_stacked, aes(y = frequency, x = temperature_c, fill = as.factor(mold
   theme_cowplot()
 ```
 
-
 Examining mold cover data to find the best distribution
 ```{r}
 descdist(tunidata$mold_cover)
-fitDist(mold_cover, data = tunidata, type = "realline", try.gamlss = T)
+fit <- fitDist(mold_cover, data = tunidata, type = "realAll", try.gamlss = T)
+fit$fits
+
 ```
 
 Fitdist determined ST1 to be the best distribution, comparing it against a normal distribution to make sure AIC value is lower. AIC value of ST1 = -743.8 while AIC value of normal = 328
@@ -129,12 +131,18 @@ GAIC(mST1, mNO)
 
 Now creating a full model, reduced model is the same as full model. No factors are significant
 ```{r}
-topmod <- gamlss(mold_cover ~ water_type + temperature_c + exposure_time_s +
-water_type*temperature_c*exposure_time_s + random(as.factor(colony_id)), 
-family = ST1(), data = tunirgb)
+tunirgb$colony_id <- as.factor(tunirgb$colony_id)
+tunirgb$mold_cover <- as.factor(tunirgb$mold_cover)
 
-summary(topmod)
+ordinalmodfull <- clmm2(mold_cover ~ water_type + temperature_c + exposure_time_s +
+                     exposure_time_s*water_type*temperature_c,
+                     random = colony_id, data = tunirgb, Hess = TRUE)
+summary(ordinalmodfull)
+
+#temperature_c90 p=0.041566
+
 ```
+
 
 ###change in weight after 48 hours 
 
@@ -151,6 +159,7 @@ p2 <- ggplot(tuni_data1, aes(x = exposure_time_s, y = ChangeWetWeight48, fill = 
 p3 <- p2 + facet_grid(cols = vars(temperature_c))
 
 p3 + p4 + plot_layout(ncol=1)
+=
 ```
 
 
