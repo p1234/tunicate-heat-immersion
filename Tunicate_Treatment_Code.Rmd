@@ -20,6 +20,7 @@ Put in table of contents here
 ```{r setup, echo=FALSE, warning=FALSE}
 library(tidyverse)
 library(cowplot)
+library(patchwork)
 library(ggplot2)
 library(here)
 library(tidyr)
@@ -142,11 +143,23 @@ summary(ordinalmodfull)
 
 ```
 
-Anova test
+
+###change in weight after 48 hours 
+
 ```{r}
-#moldyaov <- aov(mold_cover ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s, data = tunirgb)
-#summary(moldyaov)
-#TukeyHSD(moldyaov)
+#Data Visualization
+
+tuni_data1 <- tuni_data1 %>% mutate(ChangeWetWeight48 = `X48hr_weight`-post_acclimation_weight_g)
+
+p2 <- ggplot(tuni_data1, aes(x = exposure_time_s, y = ChangeWetWeight48, fill = water_type, ))+
+  labs(x = "Immersion time (s)", y = "Change in wet weight after 48hrs (g)", fill = "Water type")+
+  geom_boxplot(alpha = 0.6)+
+  theme_bw()
+
+p3 <- p2 + facet_grid(cols = vars(temperature_c))
+
+p3 + p4 + plot_layout(ncol=1)
+=
 ```
 
 
@@ -159,13 +172,12 @@ tuni_data1 <- tunidata %>% mutate(ChangeWetWeight = final_weight_g-post_acclimat
 #Visualizing Data
 
 p <- ggplot(tuni_data1, aes(x = exposure_time_s, y = ChangeWetWeight, fill = water_type))+
-  labs(x = "Exposure time (s)", y = "Change in wet weight (g)", fill = "Water type")+
+  labs(x = "Immersion time (s)", y = "Change in wet weight after 3wks (g)", fill = "Water type")+
 #labs(title = "Temperature (°C)")+
-  geom_jitter(position = position_dodge(width=0.75))+
-  geom_boxplot(alpha = 0.5)+
+  geom_boxplot(alpha = 0.6)+
   theme_bw()
 
-p + facet_grid(cols = vars(temperature_c))
+p4 <- p + facet_grid(cols = vars(temperature_c))
 
 hist(tuni_data1$ChangeWetWeight)
 shapiro.test(tuni_data1$ChangeWetWeight)
@@ -233,6 +245,12 @@ formula(step.modsurvival)
 #survival ~ temperature_c
 ```
 
+Kruskie
+
+```{r}
+kruskal.test(survival ~ temperature_c, data = tunidata)
+#Kruskal-Wallis chi-squared = 26.171, df = 3, p-value = 8.781e-06
+```
 
 since temperature is the only explanatory variable - thus we can use Kruskal-Wallis Test to see p-values comparing temperatures to controls
 ```{r}
@@ -276,6 +294,13 @@ step.mod <- stepAIC(mod, direction = "backward", trace = F)
 summary(step.mod)
 formula(step.mod)
 #attachment ~ temperature_c
+```
+
+Kruskie
+
+```{r}
+kruskal.test(attachment ~ temperature_c, data = tunidata)
+#Kruskal-Wallis chi-squared = 37.783, df = 3, p-value = 3.142e-08
 ```
 
 since temperature is the only explanatory variable - thus we can use Kruskal-Wallis Test to see p-values comparing temperatures to controls
