@@ -159,7 +159,7 @@ p2 <- ggplot(tuni_data1, aes(x = exposure_time_s, y = ChangeWetWeight48, fill = 
 p3 <- p2 + facet_grid(cols = vars(temperature_c))
 
 p3 + p4 + plot_layout(ncol=1)
-=
+
 ```
 
 
