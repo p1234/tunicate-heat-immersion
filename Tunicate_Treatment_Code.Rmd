@@ -54,7 +54,7 @@ shapiro.test(tunidata$X48hr_rgb)
 ```
 
 Using a linear model for normal distribution - allows you to use random effects and nested effects 
-```{r}
+```{r, results='hide'}
 tunirgb <- tunidata %>% 
   mutate(exposure_time_s = as.factor(exposure_time_s)) %>% 
   mutate(temperature_c = as.factor(temperature_c))
@@ -65,7 +65,7 @@ summary(modrgb)
 
 Since model is not influenced by random effects, take this out of the model (stepAIC does not work with random effects) and then reduce model 
 
-```{r}
+```{r, warning =FALSE}
 modrgb <- lm(X48hr_rgb ~ exposure_time_s + water_type + temperature_c + exposure_time_s*water_type*temperature_c, family = gaussian, data = tunirgb)
 stepmodrgb <- stepAIC(modrgb, direction = "backward", trace = F)
 formula(stepmodrgb)
@@ -118,7 +118,6 @@ Examining mold cover data to find the best distribution
 descdist(tunidata$mold_cover)
 fit <- fitDist(mold_cover, data = tunidata, type = "realAll", try.gamlss = T)
 fit$fits
-
 ```
 
 Fitdist determined ST1 to be the best distribution, comparing it against a normal distribution to make sure AIC value is lower. AIC value of ST1 = -743.8 while AIC value of normal = 328
@@ -142,6 +141,7 @@ summary(ordinalmodfull)
 #temperature_c90 p=0.041566
 
 ```
+
 
 
 ###change in weight after 48 hours 
