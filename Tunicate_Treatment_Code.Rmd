@@ -1,6 +1,6 @@
 ---
 title: "Temperature and Freshwater as Methods for Controlling D. Vexillum Biofouling"
-author: "Payton Arthur, Haze de Haas, Lauren Gill"
+author: "Payton Arthur, Hazel de Haas, Lauren Gill"
 date: "27/11/2021"
 output: pdf_document
 ---
@@ -187,7 +187,7 @@ summary(mod_changeweightv2)
 ```
 
 
-###Survival
+### Survival
 
 
 Visualizing Data 
@@ -237,7 +237,7 @@ dunnTest(survival ~ temperature_c, data = tunidata)
 #p-value for 12-90 and 12-70 is significant!
 ```
 
-Attachment
+### Attachment
 
 
 Data Visualization
