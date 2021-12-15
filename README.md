@@ -17,5 +17,5 @@ Picture taken by Siobhan Gray (2021)
 
 ![Group_authours](https://github.com/p1234/tunicate-heat-immersion/blob/main/Images/group.png)
 
-Authors collecting tunicates for the experiment
+Authors collecting tunicates for the experiment. Picture taken by Michael Alexander Chung (2021)
 
