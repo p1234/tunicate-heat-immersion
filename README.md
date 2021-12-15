@@ -9,5 +9,5 @@ Hazel de Haas (Biology Undergraduate - Marine Biology concentration, University 
 
 Lauren Gill (Biology Undergraduate, University of British Columbia; laureng6@student.ubc.ca)
 
-This repository includes the data and code needed to reproduce the results reported in __Sea snot, see ya later: An assessment of heat and freshwater for controlling the invasive, biofouling tunicate, Didemnum vexillum__.  The code can be found under Tunicate_Treatment_Code.rmd.  Raw data including photos of the samples can be found on a USB in the Bamfield Marine Science Center, Bamfield BC, Canada. 
+This repository includes the data and code needed to reproduce the results reported in __Sea snot, see ya later: An assessment of heat and freshwater for controlling the invasive, biofouling tunicate, Didemnum vexillum__.  The code can be found under Tunicate_Treatment_Code.rmd.  Raw data including photos of the samples can be found on a USB in the Bamfield Marine Science Center, Bamfield BC, Canada and can be made available by contacting the Unviersity Programs Coordinator. 
 
