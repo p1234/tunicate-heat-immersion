@@ -1,0 +1,11 @@
+"0","
+deltachangergb <- ggplot(tunirgb, aes(x = temperature_c, y = change_rgb, fill = water_type))+
+  labs(x = ""Temperature (°C)"", y = ""Change in mean RGB"", fill = ""Water type"")+
+#labs(title = ""Temperature (°C)"")+
+  geom_jitter(position = position_dodge(width=0.75))+
+  geom_boxplot(alpha = 0.6)+
+  theme_bw()
+"
+"2","Error in ggplot(tunirgb, aes(x = temperature_c, y = change_rgb, fill = water_type)) : 
+  object 'tunirgb' not found
+"

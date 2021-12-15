@@ -1,0 +1,5 @@
+"0","#
+formula(stepmodweight48)
+"
+"1","ChangeWetWeight48 ~ water_type + temperature_c + water_type:temperature_c
+"

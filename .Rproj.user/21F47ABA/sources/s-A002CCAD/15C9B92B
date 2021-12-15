@@ -1,0 +1,31 @@
+{
+    "id": "15C9B92B",
+    "path": "~/Github/tunicate-heat-immersion/Tunicate_Treatment_Code.Rmd",
+    "project_path": "Tunicate_Treatment_Code.Rmd",
+    "type": "r_markdown",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1639254553775.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "last_setup_crc32": "A002CCADd82cd2a7",
+        "cursorPosition": "98,27",
+        "scrollLine": "91",
+        "docOutlineVisible": "1",
+        "rmdVisualMode": "false",
+        "rmdVisualWrapConfigured": "true",
+        "rmdVisualModeLocation": "1199:135"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1639594241,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1639594241117,
+    "read_only": false,
+    "read_only_alternatives": []
+}

@@ -1,0 +1,3 @@
+"0","#moldyaov <- aov(mold_cover ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s, data = tunirgb)"
+"0","#summary(moldyaov)"
+"0","#TukeyHSD(moldyaov)"
