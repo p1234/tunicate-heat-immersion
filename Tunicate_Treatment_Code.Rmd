@@ -53,7 +53,8 @@ Using a linear model for normal distribution - allows you to use random effects 
 ```{r, results='hide'}
 tunirgb <- tunidata %>% 
   mutate(exposure_time_s = as.factor(exposure_time_s)) %>% 
-  mutate(temperature_c = as.factor(temperature_c))
+  mutate(temperature_c = as.factor(temperature_c)) %>%
+  mutate(change_rgb = X48hr_rgb-initial_rgb)
 
 modrgb <- lm(X48hr_rgb ~ exposure_time_s + water_type + temperature_c + exposure_time_s*water_type*temperature_c + (1|colony_id), family = gaussian, data = tunirgb)
 summary(modrgb)
@@ -76,7 +77,7 @@ summary(newmodrgb)
 Graph
 ```{r}
 
-deltachangergb <- ggplot(tunirgb, aes(x = temperature_c, y = deltachangergb, fill = water_type))+
+deltachangergb <- ggplot(tunirgb, aes(x = temperature_c, y = change_rgb, fill = water_type))+
   labs(x = "Temperature (°C)", y = "Change in mean RGB", fill = "Water type")+
 #labs(title = "Temperature (°C)")+
   geom_jitter(position = position_dodge(width=0.75))+
@@ -374,6 +375,3 @@ dunnTest(attachment ~ temperature_c, data = tuni_data1)
 #p-value for 12-90, 12-70 and 12-50 are significant
 ```
 
-
-
-# testing 
