@@ -1,13 +1,9 @@
 ---
 title: "Temperature and Freshwater as Methods for Controlling D. Vexillum Biofouling"
-author: "Payton Arthur, Haze de Haas, Lauren Gill"
+author: "Payton Arthur, Hazel de Haas, Lauren Gill"
 date: "27/11/2021"
 output: pdf_document
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
 ## Abstract
 Paste abstract in here
@@ -54,10 +50,11 @@ shapiro.test(tunidata$X48hr_rgb)
 ```
 
 Using a linear model for normal distribution - allows you to use random effects and nested effects 
-```{r}
+```{r, results='hide'}
 tunirgb <- tunidata %>% 
   mutate(exposure_time_s = as.factor(exposure_time_s)) %>% 
-  mutate(temperature_c = as.factor(temperature_c))
+  mutate(temperature_c = as.factor(temperature_c)) %>%
+  mutate(change_rgb = X48hr_rgb-initial_rgb)
 
 modrgb <- lm(X48hr_rgb ~ exposure_time_s + water_type + temperature_c + exposure_time_s*water_type*temperature_c + (1|colony_id), family = gaussian, data = tunirgb)
 summary(modrgb)
@@ -65,7 +62,7 @@ summary(modrgb)
 
 Since model is not influenced by random effects, take this out of the model (stepAIC does not work with random effects) and then reduce model 
 
-```{r}
+```{r, warning =FALSE}
 modrgb <- lm(X48hr_rgb ~ exposure_time_s + water_type + temperature_c + exposure_time_s*water_type*temperature_c, family = gaussian, data = tunirgb)
 stepmodrgb <- stepAIC(modrgb, direction = "backward", trace = F)
 formula(stepmodrgb)
@@ -80,15 +77,14 @@ summary(newmodrgb)
 Graph
 ```{r}
 
-deltachangergb <- ggplot(tunirgb, aes(x = temperature_c, y = deltachangergb, fill = water_type))+
-  labs(x = "Temperature (°C)", y = "Change in Mean RGB", fill = "Water type")+
+deltachangergb <- ggplot(tunirgb, aes(x = temperature_c, y = change_rgb, fill = water_type))+
+  labs(x = "Temperature (°C)", y = "Change in mean RGB", fill = "Water type")+
 #labs(title = "Temperature (°C)")+
   geom_jitter(position = position_dodge(width=0.75))+
   geom_boxplot(alpha = 0.6)+
   theme_bw()
 
-ggsave("deltachangergb.jpg")
-
+#ggsave("change-in-mean-rgb.jpg")
 ```
 
 
@@ -106,11 +102,13 @@ Stacked bar graphs showing mold cover
 ```{r}
 ggplot(tuni_stacked, aes(y = frequency, x = temperature_c, fill = as.factor(mold_cover))) +
   geom_bar(stat = "identity", position = "fill") +
-  facet_grid(as.factor(exposure_time_s) ~ water_type) +
+  facet_grid(.~water_type) +
   labs(x ="Temperature (°C)", y = "Frequency")+
   scale_fill_brewer(palette = "Oranges", direction=1) +
   labs(fill = "Mold Cover") +
-  theme_cowplot()
+  theme_bw()
+
+#ggsave("mold-cover.jpg")
 ```
 
 Examining mold cover data to find the best distribution
@@ -118,7 +116,6 @@ Examining mold cover data to find the best distribution
 descdist(tunidata$mold_cover)
 fit <- fitDist(mold_cover, data = tunidata, type = "realAll", try.gamlss = T)
 fit$fits
-
 ```
 
 Fitdist determined ST1 to be the best distribution, comparing it against a normal distribution to make sure AIC value is lower. AIC value of ST1 = -743.8 while AIC value of normal = 328
@@ -144,21 +141,50 @@ summary(ordinalmodfull)
 ```
 
 
+
 ###change in weight after 48 hours 
 
 ```{r}
 #Data Visualization
 
+#Making new columns for changes in weight
+tuni_data1 <- tunidata %>% mutate(ChangeWetWeight = final_weight_g-post_acclimation_weight_g)
 tuni_data1 <- tuni_data1 %>% mutate(ChangeWetWeight48 = `X48hr_weight`-post_acclimation_weight_g)
 
 p2 <- ggplot(tuni_data1, aes(x = exposure_time_s, y = ChangeWetWeight48, fill = water_type, ))+
-  labs(x = "Immersion time (s)", y = "Change in wet weight after 48hrs (g)", fill = "Water type")+
+  labs(x = "Immersion time (s)", y = "Change in wet weight (g)", fill = "Water type")+
   geom_boxplot(alpha = 0.6)+
   theme_bw()
 
 p3 <- p2 + facet_grid(cols = vars(temperature_c))
 
-p3 + p4 + plot_layout(ncol=1)
+hist(tuni_data1$ChangeWetWeight48)
+shapiro.test(tuni_data1$ChangeWetWeight48)
+#p-value = 0.01824, not normal
+descdist(tuni_data1$ChangeWetWeight48)
+#might be logistic
+
+#Statistics for Change in Weight after 48 hours
+
+#Distribution Fitting
+fitDist(ChangeWetWeight48, data=tuni_data1, type="realAll", try.gamlss = T)
+#family=LO, logistic
+
+mLOG_weight <- histDist(tuni_data1$ChangeWetWeight48, "LO", density = T, main = "Logistic")
+
+GAIC(mLOG_weight)
+
+#GAMLSS Model
+mod_weight <- gamlss(ChangeWetWeight48 ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s, family = LO, data = tuni_data1)
+summary(mod_weight)
+
+#Model Selection
+stepmodweight48 <- stepGAIC(mod_weight, direction = "backward", trace = F)
+summary(stepmodweight48)
+#
+formula(stepmodweight48)
+
+#ChangeWetWeight48 ~ water_type + temperature_c + water_type:temperature_c
 
 ```
 
@@ -167,17 +193,20 @@ p3 + p4 + plot_layout(ncol=1)
 
 
 ```{r}
-tuni_data1 <- tunidata %>% mutate(ChangeWetWeight = final_weight_g-post_acclimation_weight_g)
 
 #Visualizing Data
 
 p <- ggplot(tuni_data1, aes(x = exposure_time_s, y = ChangeWetWeight, fill = water_type))+
-  labs(x = "Immersion time (s)", y = "Change in wet weight after 3wks (g)", fill = "Water type")+
+  labs(x = "Immersion time (s)", y = "Change in wet weight (g)", fill = "Water type")+
 #labs(title = "Temperature (°C)")+
   geom_boxplot(alpha = 0.6)+
   theme_bw()
 
 p4 <- p + facet_grid(cols = vars(temperature_c))
+
+p3 + p4 + plot_layout(ncol=1)
+
+#ggsave("change-in-wet-weight.jpg")
 
 hist(tuni_data1$ChangeWetWeight)
 shapiro.test(tuni_data1$ChangeWetWeight)
@@ -211,12 +240,27 @@ summary(mod_changeweightv2)
 ```
 
 
-###Survival
+### Survival
 
 
 Visualizing Data 
 ```{r}
+#making a column for the propotion of samples that survived per treatment
+tunisurv<- tunidata%>%
+  group_by(temperature_c, water_type)%>%
+  summarize(proportion_survival=sum(survival)/10, sd=sd(survival), total= n(), SE = sd(survival)/sqrt(total))
+# divided by 10 because each combination of temperature and water type has 10 data points
 
+#plotting
+pd <- position_dodge(width = 0.6)
+ggplot(tunisurv, aes(x=temperature_c, y=proportion_survival, colour=water_type))+
+  geom_point(aes(colour=water_type), position = pd, size=3)+
+  xlab("Temperature (°C)")+
+  ylab("Survival proportion")+
+  geom_errorbar(aes(ymin=proportion_survival-SE, ymax=proportion_survival+SE, width=0.5), size=1.2, position = pd)+
+  theme_bw()+labs(colour="Water type")
+
+#ggsave("survivalproportion.jpg")
 ```
 
 Testing for Normality
@@ -267,13 +311,27 @@ dunnTest(survival ~ temperature_c, data = tunidata)
 #p-value for 12-90 and 12-70 is significant!
 ```
 
-Attachment
+### Attachment
 
 
 Data Visualization
 
 ```{r}
+#making a column for proportion of samples attached to the container
+tuniattach<- tunidata%>%
+  group_by(temperature_c, water_type)%>%
+  summarize(proportion_attached=sum(attachment)/10, sd=sd(attachment), total= n(), SE = sd(attachment)/sqrt(total))
+# divided by 10 because each temperature and water type combination has 10 data points
 
+#plotting
+ggplot(tuniattach, aes(x=temperature_c, y=proportion_attached, colour=water_type))+
+  geom_point(aes(colour=water_type), position=pd, size=3)+
+  xlab("Temperature (°C)")+
+  ylab("Attachment proportion")+
+  geom_errorbar(aes(ymin=proportion_attached-SE, ymax=proportion_attached+SE, width=.5), size=1.2, position=pd)+
+  theme_bw()+labs(colour="Water type")
+
+#ggsave("attachmentproportion.jpg")
 ```
 
 Distribution Fitting
