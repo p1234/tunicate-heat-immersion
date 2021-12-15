@@ -5,8 +5,7 @@ date: "27/11/2021"
   
 output:
   pdf_document:
-    toc: true
-    toc_float: true
+    toc: TRUE
 ---
 
 ## Abstract
@@ -17,7 +16,7 @@ Put in table of contents here
 
 ## Libraries
 
-```{r setup, echo=FALSE, warning=FALSE}
+```{r setup, warning=FALSE, results='hide'}
 library(tidyverse)
 library(cowplot)
 library(patchwork)
@@ -54,7 +53,7 @@ shapiro.test(tunidata$X48hr_rgb)
 ```
 
 Using a linear model for normal distribution - allows you to use random effects and nested effects 
-```{r, results='hide'}
+```{r, warning =FALSE}
 tunirgb <- tunidata %>% 
   mutate(exposure_time_s = as.factor(exposure_time_s)) %>% 
   mutate(temperature_c = as.factor(temperature_c)) %>%
@@ -116,14 +115,14 @@ ggplot(tuni_stacked, aes(y = frequency, x = temperature_c, fill = as.factor(mold
 ```
 
 Examining mold cover data to find the best distribution
-```{r}
+```{r, warning =FALSE}
 descdist(tunidata$mold_cover)
 fit <- fitDist(mold_cover, data = tunidata, type = "realAll", try.gamlss = T)
 fit$fits
 ```
 
 Fitdist determined ST1 to be the best distribution, comparing it against a normal distribution to make sure AIC value is lower. AIC value of ST1 = -743.8 while AIC value of normal = 328
-```{r}
+```{r, warning =FALSE}
 mST1 <- histDist(tunidata$mold_cover, "ST1", density = T, main = "Skew t (Azzalini type 1)")
 mNO <- histDist(tunidata$mold_cover, "NO", density = T, main = "Normal")
 GAIC(mST1, mNO)
@@ -131,7 +130,7 @@ GAIC(mST1, mNO)
 
 
 Now creating a full model, reduced model is the same as full model. No factors are significant
-```{r}
+```{r, warning =FALSE}
 tunirgb$colony_id <- as.factor(tunirgb$colony_id)
 tunirgb$mold_cover <- as.factor(tunirgb$mold_cover)
 
@@ -165,7 +164,7 @@ p3 <- p2 + facet_grid(cols = vars(temperature_c))
 ```
 
 Testing for Normality - p-value = 0.01824 so not a normal distribution
-```{r}
+```{r, warning =FALSE}
 hist(tuni_data1$ChangeWetWeight48)
 shapiro.test(tuni_data1$ChangeWetWeight48)
 #p-value = 0.01824, not normal
@@ -174,7 +173,7 @@ descdist(tuni_data1$ChangeWetWeight48)
 ```
 
 Distribution Fitting - used FitDist function - followed a logistic distribution
-```{r}
+```{r, warning =FALSE}
 fitDist(ChangeWetWeight48, data=tuni_data1, type="realAll", try.gamlss = T)
 #family=LO, logistic
 
@@ -184,13 +183,13 @@ GAIC(mLOG_weight)
 ```
 
 GAMLSS Model
-```{r}
+```{r, warning =FALSE}
 mod_weight <- gamlss(ChangeWetWeight48 ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s, family = LO, data = tuni_data1)
 summary(mod_weight)
 ```
 
 Model Selection - final formula for change 
-```{r}
+```{r, warning =FALSE}
 stepmodweight48 <- stepGAIC(mod_weight, direction = "backward", trace = F)
 summary(stepmodweight48)
 #water_typeseawater:temperature_c50 p-value = 0.00922 significant
@@ -217,7 +216,7 @@ p3 + p4 + plot_layout(ncol=1)
 ```
 
 Testing for Normality
-```{r}
+```{r, warning =FALSE}
 hist(tuni_data1$ChangeWetWeight)
 shapiro.test(tuni_data1$ChangeWetWeight)
 #p-value = 0.7646 thus follows a normal distribution!
@@ -225,19 +224,19 @@ descdist(tuni_data1$ChangeWetWeight)
 ```
 
 Distribution Fitting
-```{r}
+```{r, warning =FALSE}
 fitDist(ChangeWetWeight, data = tuni_data1, type = "realline", try.gamlss = T)
 #this also gives normal distribution
 ```
 
 Linear Model
-```{r}
+```{r, warning =FALSE}
 mod_changeweight <- lm(ChangeWetWeight ~ exposure_time_s + water_type + temperature_c + exposure_time_s*water_type*temperature_c, family = gaussian, data = tuni_data1)
 summary(mod_changeweight)
 ```
 
 Model Selection
-```{r}
+```{r, warning =FALSE}
 #Model Selection
 step.mod_changeweight <- stepAIC(mod_changeweight, direction = "backward", trace = F)
 summary(step.mod_changeweight)
@@ -247,13 +246,13 @@ formula(step.mod_changeweight)
 ```
 
 Check Model
-```{r}
+```{r, warning =FALSE}
 check_model(step.mod_changeweight)
 #check model when water_type:temperature_c was present and had major collinearity issues, thus removed water_type:temperature and check model again and collinearity issues were solved
 ```
 
 New Model
-```{r}
+```{r, warning =FALSE}
 mod_changeweightv2 <- lm(ChangeWetWeight ~ water_type + temperature_c, family = gaussian, data = tuni_data1)
 summary(mod_changeweightv2)
 #significant p-value for temperature_c90 (p=value = 0.0315)
@@ -289,19 +288,19 @@ shapiro.test(tunidata$survival)
 ```
 
 Checking Distribution
-```{r}
+```{r, warning =FALSE}
 fitDist(survival, data = tunidata, type = "binom", try.gamlss = T)
 #family = BI (binomial)
 ```
 
 GAMLSS model 
-```{r}
+```{r, warning =FALSE}
 mod_survival <- gamlss(survival ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s + random(as.factor(colony_id)), family = BI, data = tunidata)
 summary(mod_survival)
 ```
 
 Model Selection
-```{r}
+```{r, warning =FALSE}
 step.modsurvival <- stepGAIC(mod_survival, direction = "backward", trace = F)
 summary(step.modsurvival)
 formula(step.modsurvival)
@@ -335,7 +334,7 @@ dunnTest(survival ~ temperature_c, data = tunidata)
 
 Data Visualization
 
-```{r}
+```{r, warning =FALSE}
 #making a column for proportion of samples attached to the container
 tuniattach<- tunidata%>%
   group_by(temperature_c, water_type)%>%
@@ -354,19 +353,19 @@ ggplot(tuniattach, aes(x=temperature_c, y=proportion_attached, colour=water_type
 ```
 
 Distribution Fitting
-```{r}
+```{r, warning =FALSE}
 fitDist(attachment, data = tuni_data1, type = "binom", try.gamlss = T)
 #family = BI (binomial)
 ```
 
 GAMLSS Model
-```{r}
+```{r, warning =FALSE}
 mod <- gamlss(attachment ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s, family = BI, data = tuni_data1)
 summary(mod)
 ```
 
 Model Selection
-```{r}
+```{r, warning =FALSE}
 step.mod <- stepAIC(mod, direction = "backward", trace = F)
 summary(step.mod)
 formula(step.mod)
@@ -381,7 +380,7 @@ kruskal.test(attachment ~ temperature_c, data = tunidata)
 ```
 
 since temperature is the only explanatory variable - thus we can use Kruskal-Wallis Test to see p-values comparing temperatures to controls
-```{r}
+```{r, warning =FALSE}
 dunnTest(attachment ~ temperature_c, data = tuni_data1)
 #Comparison        Z      P.unadj        P.adj
 #1    12 - 50 5.018805 5.199384e-07 3.119630e-06*
