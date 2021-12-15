@@ -99,6 +99,8 @@ deltachangergb <- ggplot(tunirgb, aes(x = temperature_c, y = change_rgb,
   geom_boxplot(alpha = 0.6)+
   theme_bw()
 deltachangergb
+
+#ggsave("delta-change-rbg.jpg")
 ```
 
 ### Mold Cover
