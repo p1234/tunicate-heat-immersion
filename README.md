@@ -1,4 +1,4 @@
-# tunicate-heat-immersion
+# Tunicate Heat Immersion Project
 ## Repository for the Directed Studies project of Payton Arthur, Hazel de Haas and Lauren Gill, BMSC 2021.
 
 Authors:
