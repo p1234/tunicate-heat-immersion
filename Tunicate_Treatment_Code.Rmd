@@ -144,9 +144,8 @@ summary(ordinalmodfull)
 
 ###change in weight after 48 hours 
 
+Data Visualization
 ```{r}
-#Data Visualization
-
 #Making new columns for changes in weight
 tuni_data1 <- tunidata %>% mutate(ChangeWetWeight = final_weight_g-post_acclimation_weight_g)
 tuni_data1 <- tuni_data1 %>% mutate(ChangeWetWeight48 = `X48hr_weight`-post_acclimation_weight_g)
@@ -157,45 +156,48 @@ p2 <- ggplot(tuni_data1, aes(x = exposure_time_s, y = ChangeWetWeight48, fill = 
   theme_bw()
 
 p3 <- p2 + facet_grid(cols = vars(temperature_c))
+```
 
+Testing for Normality
+```{r}
 hist(tuni_data1$ChangeWetWeight48)
 shapiro.test(tuni_data1$ChangeWetWeight48)
 #p-value = 0.01824, not normal
 descdist(tuni_data1$ChangeWetWeight48)
 #might be logistic
+```
 
-#Statistics for Change in Weight after 48 hours
-
-#Distribution Fitting
+Distribution Fitting
+```{r}
 fitDist(ChangeWetWeight48, data=tuni_data1, type="realAll", try.gamlss = T)
 #family=LO, logistic
 
 mLOG_weight <- histDist(tuni_data1$ChangeWetWeight48, "LO", density = T, main = "Logistic")
 
 GAIC(mLOG_weight)
+```
 
-#GAMLSS Model
+GAMLSS Model
+```{r}
+
 mod_weight <- gamlss(ChangeWetWeight48 ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s, family = LO, data = tuni_data1)
 summary(mod_weight)
+```
 
-#Model Selection
+Model Selection
+```{r}
 stepmodweight48 <- stepGAIC(mod_weight, direction = "backward", trace = F)
 summary(stepmodweight48)
 #
 formula(stepmodweight48)
 
 #ChangeWetWeight48 ~ water_type + temperature_c + water_type:temperature_c
-
 ```
-
 
 ###Change in Weight over 3 Weeks (compare to post-acclimation)
 
-
+Data Visualization
 ```{r}
-
-#Visualizing Data
-
 p <- ggplot(tuni_data1, aes(x = exposure_time_s, y = ChangeWetWeight, fill = water_type))+
   labs(x = "Immersion time (s)", y = "Change in wet weight (g)", fill = "Water type")+
 #labs(title = "Temperature (°C)")+
@@ -207,38 +209,50 @@ p4 <- p + facet_grid(cols = vars(temperature_c))
 p3 + p4 + plot_layout(ncol=1)
 
 #ggsave("change-in-wet-weight.jpg")
+```
 
+Testing for Normality
+```{r}
 hist(tuni_data1$ChangeWetWeight)
 shapiro.test(tuni_data1$ChangeWetWeight)
 #p-value = 0.7646 thus follows a normal distribution!
 descdist(tuni_data1$ChangeWetWeight)
+```
 
-#Statistics for Change in Weight after 3 Weeks
-
-#Distribution Fitting
+Distribution Fitting
+```{r}
 fitDist(ChangeWetWeight, data = tuni_data1, type = "realline", try.gamlss = T)
 #this also gives normal distribution
+```
 
-#Linear Model
+Linear Model
+```{r}
 mod_changeweight <- lm(ChangeWetWeight ~ exposure_time_s + water_type + temperature_c + exposure_time_s*water_type*temperature_c, family = gaussian, data = tuni_data1)
 summary(mod_changeweight)
+```
 
+Model Selection
+```{r}
 #Model Selection
 step.mod_changeweight <- stepAIC(mod_changeweight, direction = "backward", trace = F)
 summary(step.mod_changeweight)
 formula(step.mod_changeweight)
 
 #ChangeWetWeight ~ water_type + temperature_c + water_type:temperature_c
+```
 
+Check Model
+```{r}
 check_model(step.mod_changeweight)
 #check model when water_type:temperature_c was present and had major collinearity issues, thus removed water_type:temperature and check model again and collinearity issues were solved
+```
 
+New Model
+```{r}
 mod_changeweightv2 <- lm(ChangeWetWeight ~ water_type + temperature_c, family = gaussian, data = tuni_data1)
 summary(mod_changeweightv2)
 #significant p-value for temperature_c90 (p=value = 0.0315)
-
 ```
-
 
 ### Survival
 
