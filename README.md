@@ -1,7 +1,7 @@
 # Tunicate Heat Immersion Project
 ## Repository for the Directed Studies project of Payton Arthur, Hazel de Haas and Lauren Gill, BMSC 2021.
 
-Authors:
+*Authors:*
 
 Payton Arthur (Biology Undergraduate, University of Calgary; payton.arthur@ucalgary.ca)
 
