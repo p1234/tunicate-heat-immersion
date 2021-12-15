@@ -1,5 +1,0 @@
-"0","tunidata <- read.csv(""tunicate_master.csv"")"
-"0","tunidata$temperature_c <- as.factor(tunidata$temperature_c)"
-"0","tunidata$water_type <- as.factor(tunidata$water_type)"
-"0","tunidata$exposure_time_s <- as.factor(tunidata$exposure_time_s)"
-"0",""
