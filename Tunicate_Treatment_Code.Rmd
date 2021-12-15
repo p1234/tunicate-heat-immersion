@@ -146,7 +146,9 @@ summary(ordinalmodfull)
 
 
 
+
 ### Change in weight after 48 hours 
+
 
 Data Visualization
 ```{r}
@@ -162,7 +164,7 @@ p2 <- ggplot(tuni_data1, aes(x = exposure_time_s, y = ChangeWetWeight48, fill = 
 p3 <- p2 + facet_grid(cols = vars(temperature_c))
 ```
 
-Testing for Normality
+Testing for Normality - p-value = 0.01824 so not a normal distribution
 ```{r}
 hist(tuni_data1$ChangeWetWeight48)
 shapiro.test(tuni_data1$ChangeWetWeight48)
@@ -171,7 +173,7 @@ descdist(tuni_data1$ChangeWetWeight48)
 #might be logistic
 ```
 
-Distribution Fitting
+Distribution Fitting - used FitDist function - followed a logistic distribution
 ```{r}
 fitDist(ChangeWetWeight48, data=tuni_data1, type="realAll", try.gamlss = T)
 #family=LO, logistic
@@ -183,18 +185,17 @@ GAIC(mLOG_weight)
 
 GAMLSS Model
 ```{r}
-
 mod_weight <- gamlss(ChangeWetWeight48 ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s, family = LO, data = tuni_data1)
 summary(mod_weight)
 ```
 
-Model Selection
+Model Selection - final formula for change 
 ```{r}
 stepmodweight48 <- stepGAIC(mod_weight, direction = "backward", trace = F)
 summary(stepmodweight48)
-#
-formula(stepmodweight48)
+#water_typeseawater:temperature_c50 p-value = 0.00922 significant
 
+formula(stepmodweight48)
 #ChangeWetWeight48 ~ water_type + temperature_c + water_type:temperature_c
 ```
 
@@ -307,7 +308,7 @@ formula(step.modsurvival)
 #survival ~ temperature_c
 ```
 
-Kruskie
+Kruskal-Wallis Test
 
 ```{r}
 kruskal.test(survival ~ temperature_c, data = tunidata)
