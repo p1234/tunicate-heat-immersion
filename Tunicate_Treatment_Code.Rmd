@@ -2,7 +2,11 @@
 title: "Temperature and Freshwater as Methods for Controlling D. Vexillum Biofouling"
 author: "Payton Arthur, Hazel de Haas, Lauren Gill"
 date: "27/11/2021"
-output: pdf_document
+  
+output:
+  pdf_document:
+    toc: true
+    toc_float: true
 ---
 
 ## Abstract
@@ -142,7 +146,9 @@ summary(ordinalmodfull)
 
 
 
-###Change in weight after 48 hours 
+
+### Change in weight after 48 hours 
+
 
 Data Visualization
 ```{r}
@@ -193,7 +199,7 @@ formula(stepmodweight48)
 #ChangeWetWeight48 ~ water_type + temperature_c + water_type:temperature_c
 ```
 
-###Change in Weight over 3 Weeks (compare to post-acclimation)
+### Change in Weight over 3 Weeks (compare to post-acclimation)
 
 Data Visualization
 ```{r}
