@@ -95,8 +95,9 @@ deltachangergb <- ggplot(tunirgb, aes(x = temperature_c, y = change_rgb,
                                       fill = water_type))+
   labs(x = "Temperature (°C)", y = "Change in mean RGB", fill = "Water type")+
 #labs(title = "Temperature (°C)")+
+  scale_fill_manual(values = c("#0072B2","#E69F00"))+
   geom_jitter(position = position_dodge(width=0.75))+
-  geom_boxplot(alpha = 0.6)+
+  geom_boxplot(alpha = 0.8)+
   theme_bw()
 deltachangergb
 
@@ -176,7 +177,8 @@ p2 <- ggplot(tuni_data1, aes(x = exposure_time_s, y = change_wet_weight_48,
                              fill = water_type, ))+
   labs(x = "Immersion time (s)", y = "Change in wet weight (g)", 
        fill = "Water type")+
-  geom_boxplot(alpha = 0.6)+
+  geom_boxplot(alpha = 0.8)+
+  scale_fill_manual(values = c("#0072B2","#E69F00"))+
   theme_bw()
 
 p3 <- p2 + facet_grid(cols = vars(temperature_c))
@@ -234,7 +236,8 @@ p <- ggplot(tuni_data1, aes(x = exposure_time_s, y = change_wet_weight_3wk,
   labs(x = "Immersion time (s)", y = "Change in wet weight (g)", 
        fill = "Water type")+
 #labs(title = "Temperature (°C)")+
-  geom_boxplot(alpha = 0.6)+
+  geom_boxplot(alpha = 0.8)+
+  scale_fill_manual(values = c("#0072B2","#E69F00"))+
   theme_bw()
 
 p4 <- p + facet_grid(cols = vars(temperature_c))
@@ -313,6 +316,8 @@ tunisurv<- tunidata%>%
 # divided by 10 because each combination of 
 #temperature and water type has 10 data points
 
+my_cols = c("freshwater" = "#0072B2", "seawater" = "#E69F00")
+
 #plotting
 pd <- position_dodge(width = 0.6)
 ggplot(tunisurv, aes(x=temperature_c, y=proportion_survival, colour=water_type))+
@@ -321,7 +326,9 @@ ggplot(tunisurv, aes(x=temperature_c, y=proportion_survival, colour=water_type))
   ylab("Survival proportion")+
   geom_errorbar(aes(ymin=proportion_survival-SE, ymax=proportion_survival+SE, 
                     width=0.5), size=1.2, position = pd)+
-  theme_bw()+labs(colour="Water type")
+  theme_bw()+labs(colour="Water type")+
+    scale_color_manual(values = my_cols)+
+  scale_fill_manual(values = my_cols)
 
 pd
 #ggsave("survivalproportion.jpg")
@@ -393,6 +400,7 @@ tuniattach<- tunidata%>%
             total= n(), SE = sd(attachment)/sqrt(total))
 # divided by 10 because each temperature and water type combination has 10 data points
 
+
 #plotting
 ggplot(tuniattach, aes(x=temperature_c, y=proportion_attached, colour=water_type))+
   geom_point(aes(colour=water_type), position=pd, size=3)+
@@ -400,7 +408,12 @@ ggplot(tuniattach, aes(x=temperature_c, y=proportion_attached, colour=water_type
   ylab("Attachment proportion")+
   geom_errorbar(aes(ymin=proportion_attached-SE, ymax=proportion_attached+SE,
                     width=.5), size=1.2, position=pd)+
-  theme_bw()+labs(colour="Water type")
+  theme_bw()+labs(colour="Water type")+
+  scale_color_manual(values = my_cols)+
+  scale_fill_manual(values = my_cols)
+
+
+
 
 #ggsave("attachmentproportion.jpg")
 ```
