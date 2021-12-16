@@ -1,0 +1,399 @@
+---
+title: "Tunicate Data"
+author: "Hazel de Haas"
+date: "10/11/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyr)
+library(car)
+library(performance)
+library(DHARMa)
+library(fitdistrplus)
+library(gamlss)
+library(tidyverse)
+library(patchwork)
+library(FSA)
+tuni_data <- read_delim("tunicate_master.csv", delim = "," )
+
+
+
+tuni_data$water_type <- replace(tuni_data$water_type, tuni_data$water_type== "freshwater", "fw" )
+tuni_data$water_type <- replace(tuni_data$water_type, tuni_data$water_type== "seawater", "sw" )
+tuni_data$exposure_time_s <-replace(tuni_data$exposure_time_s, tuni_data$exposure_time_s== "30", "120")
+tuni_data <- tuni_data %>% 
+  dplyr::rename(id_number = "id_number...2")
+
+
+#changing to factors 
+tuni_data$temperature_c <- as.factor(tuni_data$temperature_c)
+tuni_data$water_type <- as.factor(tuni_data$water_type)
+tuni_data$exposure_time_s <- as.factor(tuni_data$exposure_time_s)
+
+#removing unnecessary rows
+tuni_data <- tuni_data %>%
+  select(-c(`3wks_rgb`, `3wks_red`, `3wks_green`, `3wks_blue`, final_rgb, sd_3wks_rbg, sd_3wks_red, sd_3wks_green, sd_3wks_blue))
+
+tuni_data <- tuni_data %>%
+  select(-c(mortality))
+
+
+#this unites columns for one big boxplot
+tunicate_data_1 <- unite(tunicate_data, treatment, c(water_type, temperature_c, exposure_time_s)) 
+
+tunicate_data_1 <- tunicate_data_1 %>% mutate(ChangeRGB = `48hr_rgb`-initial_rgb)
+tunicate_data_1 <- tunicate_data %>% mutate(weight_change = `48hr_weight` - `initial_weight_g`)
+tunicate_data_1 <- tunicate_data_1 %>% mutate(percentchange_red = initial_red/`48hr_red`)
+
+tuni_data_test <- tuni_data %>%
+  unite(tuni_data_test, treatment, c(water_type, temperature_c)) 
+
+tuni_data_test <- tuni_data1
+  unite(tuni_data_test, treatment, c(water_type, temperature_c)) 
+
+#Box plot of all treatments for change in RGB
+ggplot(tunicate_data_1, aes(x = treatment, y = ChangeRGB)) +
+         geom_boxplot()
+
+#box plot change in weight for temperature 
+ggplot(tunicate_data, aes(x = temperature_c, y = weight_change)) +
+   geom_boxplot()
+
+#box plot change in weight for water type
+ggplot(tunicate_data, aes(x = water_type, y = weight_change)) +
+   geom_boxplot()
+
+#Box plot of all treatments for change in Weight
+ggplot(tunicate_data_1, aes(x = treatment, y = percentchange_weight)) +
+         geom_boxplot()
+
+#Box plot of all treatments for change in red
+ggplot(tunicate_data_1, aes(x = treatment, y = percentchange_red)) +
+         geom_boxplot()
+
+#Scatterplot
+ggplot(tunicate_data_1, aes(x = treatment, y = percentchange_weight )) +
+  geom_point()
+
+#Box plot change in weight 
+ggplot(tunicate_data_1, aes(x = treatment, y = weight_change)) +
+  geom_boxplot()
+
+#box plot mold cover
+ggplot(tun_data, aes(x = temperature_c, y = mold_cover, fill = water_type)) +
+  geom_boxplot()
+
+
+ggplot(tuni_data, aes(x = temperature_c, y = survival)) + 
+  geom_count(aes(size = after_stat(prop), group = 1)) +
+  scale_size_area(max_size = 10) + 
+  theme_classic()
+
+ggplot(tuni_data_test, aes(x = treatment, y = survival)) + 
+  geom_jitter(width = 0.10, height = 0.05) +
+  theme_classic()
+```
+
+
+  
+```
+
+```{r}
+p1 = ggplot(tunicate_data_1, aes(x = treatment, y = initial_rgb)) +
+  geom_boxplot() +
+  
+p2 = ggplot(tunicate_data_1, aes(x = treatment, y = "48hr_rgb")) +
+  geom_boxplot() +
+  
+p1 + p2
+```
+
+```{r}
+#code along with Sara Nov. 11th 
+
+library(goft)
+library(performance)
+library(tidyverse)
+library(MASS)
+
+tuni_data <- tunicate_data %>%
+  dplyr::select(-c(final_weight_g, final_rgb)) %>%
+  mutate(exposure_time_s = as.factor(exposure_time_s),
+         temperature_c = as.factor(temperature_c))
+
+
+shapiro.test(tuni_data$`48hr_rgb`)
+#p-value = 0.3433 normal distribution!
+
+#use a glm for normal distribution - allows you to use random effects and nested effects 
+
+mod <- lm(`48hr_rgb` ~ exposure_time_s + water_type + temperature_c + exposure_time_s*water_type*temperature_c, family = gaussian, data = tuni_data)
+
+#this model has too many terms - colinearity issues
+
+#are initial rgb values different between colonies? this would effect initial_rgb/colony_id - use id_number instead
+
+check_model(mod)
+summary(mod)
+
+step.mod <- stepAIC(mod, direction = "backward", trace = F)
+#this should give us a simpler formula
+summary(step.mod)
+formula(step.mod)
+# 48hr_rgb ~ water_type + temperature_c
+
+#Using 48hr weight as response variable
+
+shapiro.test(tuni_data$`48hr_weight`)
+#shapiro-wilk normality test < 0.05 thus doesn't follow normal distribution 
+
+hist(tuni_data$`48hr_weight`)
+descdist(tuni_data$`48hr_weight`)
+# on line for gamma, close to beta and lognormal, weibull is close to gamma and lognormal
+
+mGA <- histDist(tuni_data$`48hr_weight`, "GA", density = T, main = "Gamma")
+mlN <- histDist(tuni_data$`48hr_weight`, "LOGNO", density = T, main = "lNorm")
+mWE <- histDist(tuni_data$`48hr_weight`, "WEI", density = T, main = "Weibull")
+
+GAIC(mGA, mlN, mWE)
+#lognormal has lower GAIC value thus it is the best fit
+
+mod4 <- lm(`48hr_weight` ~ exposure_time_s + water_type + temperature_c + exposure_time_s*water_type*temperature_c, data = tuni_data)
+summary(mod2)
+
+step.mod2 <- stepAIC(mod2, direction = "backward", trace = F)
+summary(step.mod2)
+formula(step.mod2)
+
+#run generalized linear model
+
+```
+
+Stats for Attachment
+```{r}
+fitDist(attachment, data = tuni_data1, type = "binom", try.gamlss = T)
+#family = BI (binomial)
+
+tuni_data1 = tuni_data %>%
+  select(-c(final_weight_g...12, initial_blue))
+
+mod <- gamlss(attachment ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s, family = BI, data = tuni_data1)
+summary(mod)
+
+step.mod <- stepAIC(mod, direction = "backward", trace = F)
+summary(step.mod)
+formula(step.mod)
+
+#attachment ~ temperature_c
+
+#since temperature is the only explanatory variable - thus we can use Kruskal-Wallis Test to see p-values comparing temperatures to controls
+library(FSA)
+dunnTest(attachment ~ temperature_c, data = tuni_data1)
+#Comparison        Z      P.unadj        P.adj
+#1    12 - 50 5.018805 5.199384e-07 3.119630e-06*
+#2    12 - 70 5.018805 5.199384e-07 2.599692e-06*
+#3    50 - 70 0.000000 1.000000e+00 1.000000e+00
+#4    12 - 90 5.018805 5.199384e-07 2.079753e-06*
+#5    50 - 90 0.000000 1.000000e+00 1.000000e+00
+#6    70 - 90 0.000000 1.000000e+00 1.000000e+00
+
+#p-value for 12-90, 12-70 and 12-50 are significant
+
+```
+
+Stats for Wet Weight
+```{r}
+shapiro.test(tuni_data1$final_weight_g...42)
+#p-value = 0.026, doesn't follow normal distribution
+
+fitDist(final_weight_g...42, data = tuni_data1, type = "realAll", try.gamlss = T)
+#family = WEI, Weibull
+
+mod2 <- gamlss(final_weight_g...42 ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s, family = WEI, data = tuni_data1)
+summary(mod2)
+
+#water_typesw:temperature_c90 is significant, water_typesw:temperature_c90:exposure_time_s60 is almost significant
+
+step.mod2 <- stepAIC(mod2, direction = "backward", trace = F)
+summary(step.mod2)
+formula(step.mod2)
+
+#final_weight_g...42 ~ temperature_c
+
+```
+
+Stats for Survival
+```{r}
+shapiro.test(tuni_data1$survival)
+#p-value = 2.046e-15
+
+fitDist(survival, data = tuni_data1, type = "binom", try.gamlss = T)
+#family = BI (binomial)
+
+mod_survival <- gamlss(survival ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s + random(as.factor(colony_id)), family = BI, data = tuni_data1)
+summary(mod_survival)
+
+
+step.modsurvival <- stepAIC(mod_survival, direction = "backward", trace = F)
+summary(step.modsurvival)
+formula(step.modsurvival)
+
+#survival ~ temperature_c
+
+mod_survivalv2 <- gamlss(survival ~ temperature_c + (1|colony_id), family = BI, data = tuni_data1)
+summary(mod_survivalv2)
+
+#only survival at 50°C is significant with a p-value = 0.0299 - what does this mean? why is 50°C significant when it had the most variation in survival?
+#why is 12°C not here???
+
+```
+
+Survival Stats
+```{r}
+#sara's scribbles
+check_model(lm(survival ~ temperature_c + (1|colony_id), data = tuni_data1))
+
+fitDist(survival, data = tuni_data1, type = "binom", try.gamlss = T)
+#family = BI (binomial)
+
+mod_survival <- gamlss(survival ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s + random(as.factor(colony_id)), family = BI, data = tuni_data1)
+summary(mod_survival)
+
+
+step.modsurvival <- stepGAIC(mod_survival, direction = "backward", trace = F)
+formula(step.modsurvival)
+
+#survival ~ temperature_c
+summary(step.modsurvival)
+
+
+dunnTest(survival ~ temperature_c, data = tuni_data1)
+#  Comparison        Z      P.unadj        P.adj
+#1    12 - 50 2.817892 4.834013e-03 1.933605e-02 (<0.05)*
+#2    12 - 70 4.428115 9.506008e-06 5.703605e-05 (<0.05)*
+#3    50 - 70 1.610224 1.073490e-01 3.220471e-01 (>0.05)
+#4    12 - 90 4.428115 9.506008e-06 4.753004e-05 (<0.05)*
+#5    50 - 90 1.610224 1.073490e-01 2.146980e-01 (>0.05)
+#6    70 - 90 0.000000 1.000000e+00 1.000000e+00 (>0.05)
+
+```
+
+
+
+Data Visualization for Survival
+```{r}
+p3 <- ggplot(tuni_data1, aes(x = exposure_time_s, y = survival, colour = water_type))+
+   geom_jitter(width = 0.20, height = 0.15)
+   
+p3 + facet_grid(cols = vars(temperature_c))
+
+p4 <- ggplot(tuni_data1, aes(x = exposure_time_s, y = survival))+
+   geom_count(aes(size = after_stat(prop)), group = 1, alpha = 0.3)+
+  geom_jitter(aes(colour = water_type), width = 0.20, height = 0.10)+
+   scale_size_area(max_size = 15)
+   
+  
+p4 + facet_grid(cols = vars(temperature_c))
+   
+
+```
+
+
+Change in Weight over 3 Weeks (compare to post-acclimation)
+```{r}
+tuni_data1 <- tuni_data %>% mutate(ChangeWetWeight = final_weight_g-post_acclimation_weight_g)
+
+#faceting - put temperature, exposure time and water type on figure
+
+p <- ggplot(tuni_data1, aes(x = exposure_time_s, y = ChangeWetWeight, fill = water_type, ))+
+  labs(x = "Exposure time (s)", y = "Change in wet weight after 3 weeks (g)", fill = "Water type")+
+  geom_boxplot(alpha = 0.5)+
+  theme_bw()
+
+p + facet_grid(cols = vars(temperature_c))
+
+#plot comparing initial wet weight to 3 week wet weight - multiple plots with patchwork?
+
+
+
+
+p1 <- ggplot(tuni_data1, aes(x = exposure_time_s, y = post_acclimation_weight_g, fill = water_type))+
+  labs(x = "Exposure time", y = "initial wet weight (g)", fill = "Water type")+
+  geom_boxplot()
+  
+p11 <- p + facet_grid(cols = vars(temperature_c))
+  
+p2 <- ggplot(tuni_data1, aes(x = exposure_time_s, y = final_weight_g, fill = water_type))+
+  labs(x = "Exposure time", y = "final weight weight (g)", fill = "Water type")+
+  geom_boxplot()
+
+
+
+
+hist(tuni_data1$ChangeWetWeight)
+shapiro.test(tuni_data1$ChangeWetWeight)
+#p-value = 0.7646 thus follows a normal distribution!
+descdist(tuni_data1$ChangeWetWeight)
+
+
+##Does fitdist work on a distribution with negative numbers?
+fitDist(ChangeWetWeight, data = tuni_data1, type = "realline", try.gamlss = T)
+
+
+mod_changeweight <- lm(ChangeWetWeight ~ exposure_time_s + water_type + temperature_c + exposure_time_s*water_type*temperature_c + random(as.factor(colony_id)), data = tuni_data1)
+summary(mod_changeweight)
+
+stepmod_changeweight <- stepAIC(mod_changeweight, direction = "backward", trace = F)
+#StepAIC is for linear models, StepGAIC is for gamlss
+summary(stepmod_changeweight)
+formula(stepmod_changeweight)
+
+#ChangeWetWeight ~ water_type + temperature_c + water_type:temperature_c
+check_model(stepmod_changeweight)
+#check model when water_type:temperature_c was present and had major collinearity issues, thus removed water_type:temperature and check model again and collinearity issues were solved
+
+mod_changeweightv2 <- lm(ChangeWetWeight ~ water_type + temperature_c, data = tuni_data1)
+summary(mod_changeweightv2)
+
+#significant p-value for temperature_c90 (p=value = 0.0315)
+
+#what happens when you remove random effect
+mod_changeweight3 <- lm(ChangeWetWeight ~ exposure_time_s + water_type + temperature_c + exposure_time_s*water_type*temperature_c, data = tuni_data1)
+summary(mod_changeweight3)
+
+stepmod_changeweight3 <- stepAIC(mod_changeweight3, direction = "backward", trace = F)
+#StepAIC is for linear models, StepGAIC is for gamlss
+summary(stepmod_changeweight3)
+formula(stepmod_changeweight3)
+check_model(stepmod_changeweight3)
+
+mod_changeweight4 <- lm(ChangeWetWeight ~ water_type + temperature_c, data = tuni_data1)
+summary(mod_changeweight4)
+
+```
+
+```{r}
+write.csv(tuni_data1,"Desktop\\tunicate_master.csv", row.names = FALSE)
+```
+
+Graph for Change it Wet Weight after 48 hours
+```{r}
+tuni_data1 <- tuni_data1 %>% mutate(ChangeWetWeight48 = `48hr_weight`-post_acclimation_weight_g)
+
+#faceting - put temperature, exposure time and water type on figure
+
+p6 <- ggplot(tuni_data1, aes(x = exposure_time_s, y = ChangeWetWeight48, fill = water_type, ))+
+  labs(x = "Exposure time (s)", y = "Change in wet weight (g)", fill = "Water type")+
+  geom_boxplot(alpha = 0.5)+
+  theme_bw()
+
+p6 + facet_grid(cols = vars(temperature_c))
+
+
+```
+

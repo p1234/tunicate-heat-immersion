@@ -1,0 +1,333 @@
+---
+title: "The ggplot thickens"
+author: "Daniel Wuitchik"
+date: "10/20/2021"
+output: 
+  html_document:
+    df_print: kable
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+editor_options:
+  chunk_output_type: inline
+---
+
+One of the major advantages of using R for statistical and data analyses is that it is very easy to produce figures that are high quality for publication. Please take a moment to visit <https://www.r-graph-gallery.com/> to get a taste of the endless possibilities for visualizations.
+
+Okay, first thing is first. 🔥**Set your working directory!** 🔥
+
+### Load up your libraries
+
+```{r}
+install.packages("MASS")
+```
+
+
+```{r message=FALSE, warning=FALSE}
+library(MASS) # a statistical package, but also has the dataset "snails"
+library(patchwork)
+library(tidyverse) # our tried and true R friend. Also loads up ggplot!
+```
+
+### Data cleaning
+
+Here I am arbitrarily renaming our species. Species "A" to the Purple-Ring Topsnail, a truly beautiful species here in Bamfield and species "B" to "Red Turban Snail". I find it helpful to make the naming of data something relevant as it is helpful for understanding what is going on in terms of the type of data it represents.
+
+if else statement - if species a, call it tipsnail, if something else call it species b
+
+```{r}
+data = snails %>%
+  mutate(Species = if_else(Species == "A", "Purple-Ring Topsnail", "Red Turban Snail"))
+```
+
+Let's quickly explore this data!
+
+```{r}
+head(data) # top of the data frame
+tail(data) # bottom of the data frame
+dim(data) # dimensions of the data frame (we can also look in the environment)
+summary(data)
+```
+
+Okay, we want to know survival %. Let's use our fancy data wrangling tricks of the trade to make a new column that has that information.
+
+#### Mini Challenge: Create a new column that calculates the percent survival
+
+```{r}
+snail_data_new <- data %>%
+  mutate(survival_percent = ((N - Deaths)/N) * 100)
+```
+
+### Intro to ggplot2
+
+gold standard of plotting in r
+
+ggplot is quickly turning into the gold standard for plotting biological data when using R. Its power resides on its logical syntax that marries well with the rest of tidyverse. At first, the syntax is blocky, confusing and annoying. But, with a little experience you will quickly understand its nuances. To master the ggplot, it's best to work in iterations and layers. Let me show you an example of how I attack a figure.
+
+### Syntax
+
+The basic anatomy of a ggplot consists of the following elements:
+
++---------------------------------------+------------------------------------------------------+
+| Syntax                                | Description                                          |
++=======================================+======================================================+
+| `ggplot()`                            | Creates a ggplot                                     |
++---------------------------------------+------------------------------------------------------+
+| `aes()`                               | Constructs aesthetic mappings                        |
++---------------------------------------+------------------------------------------------------+
+| `+`                                   | Adds a component to your plot                        |
++---------------------------------------+------------------------------------------------------+
+| `geom_`                               | Geometric object being used to set the plotting type |
++---------------------------------------+------------------------------------------------------+
+
+With these basic elements, you can create a high quality figure. There are of course many more stylistic additions we can make. The workflow for making a ggplot is typically an iterative process where you gradually refine your work towards your finished project.
+
+### Setting the stage
+
+The first thing to consider when making figures is laying out your axes.
+
+```{r}
+ggplot(snail_data_new, aes(x = Exposure, y = survival_percent))
+```
+
+We are interested in how different exposure treatments effect snail survival.
+
+```{r}
+ggplot(snail_data_new, aes(x = Exposure, y = survival_percent, fill = Species)) + 
+         geom_boxplot()
+```
+
+Hmm, that's not right. There should be 4 categories, not two!
+
+#### **Q:** Why are there only two categories and not four like we might expect?
+
+because exposure is numerical value and not categorical
+
+**Hint** you may want to explore how R is interpreting these data.
+
+```{r}
+snailed_it = snail_data_new %>%
+  mutate(Exposure = as.factor(Exposure))
+```
+
+```{r}
+class("Exposure")
+```
+character
+
+Okay, with that addressed what do we see:
+
+```{r}
+ggplot(snailed_it, aes(x = Exposure, y = survival_percent, fill = Species)) + 
+  geom_boxplot()
+```
+
+### Layering Geoms
+
+Okay awesome! We have our first boxplot, not bad not bad. It's a growing trend to add data distributions so that we can see everything as some feel like boxplots don't sufficiently display data. We can essentially add another plot by adding another geom, in this case geom_point.
+
+```{r}
+ggplot(snailed_it, aes(x = Exposure, y = survival_percent, fill = Species)) + 
+  geom_boxplot() + 
+  geom_point()
+```
+
+Bummer, that looks stupid! What do you think is going on here?
+
+```{r}
+ggplot(snailed_it, aes(x = Exposure, y = survival_percent, fill = Species)) + 
+  geom_boxplot() + 
+  geom_point(position = position_jitterdodge())
+```
+
+Okay, it's really hard to tell which dots are which, as it is all black! Fill changes the colour of the inside of an object. The "colour" changes the outline. Let's add colour to our aesthetics so that we can change that outline
+
+Fill = species changes fill of open object
+
+```{r}
+ggplot(snailed_it, aes(x = Exposure, y = survival_percent, fill = Species, colour = Species)) +
+  geom_boxplot() + 
+  geom_point(position = position_jitterdodge())
+```
+
+Gross. Plus, we can't see data because everything is the same colour! Luckily we can change the aesthetics within individual geoms. That way, we can change the colour in geom_point without changing the geom_boxplot
+
+changing colour within layer
+
+```{r}
+ggplot(snailed_it, aes(x = Exposure, y = survival_percent, fill = Species)) + 
+  geom_boxplot() + 
+  geom_point(aes(colour = Species), position = position_jitterdodge())
+```
+
+### Organizing layer order
+
+organizing layers - way you list it is the way it is outputed 
+
+Getting there! But, it's annoying that the points are above the boxplot and it looks messy. Luckily, the order of the layers matters and we can adjust how the plot is being laid out.
+
+```{r}
+ggplot(snailed_it, aes(x = Exposure, y = survival_percent, fill = Species)) + 
+  geom_point(aes(colour = Species), position = position_jitterdodge()) +
+  geom_boxplot() 
+```
+
+### Alpha 
+
+Nice! Now it's behind, but it's still blocking our data a little. Luckily, we can change the opacity with "alpha". No, it's not some misguided sense of toxic masculinity. Alpha of 1 is completely opaque whereas an alpha of 0 is transparent. Let's just step back a little on the opacity of the boxplot
+
+```{r}
+ggplot(snailed_it, aes(x = Exposure, y = survival_percent, fill = Species)) + 
+  geom_point(aes(colour = Species), position = position_jitterdodge()) +
+  geom_boxplot(alpha = 0.3) 
+```
+
+### Changing colours
+
+Looking sweeet! What if we want to change our colours in general? Well, there's a few ways to do that. I suggest you make a colour variable that you can associate with your data. Since these snail species have a colour associated with them, it only makes sense to change our figure plots. Colour is an effective tool at story telling. It's also very subjective and some people are colour blind.
+
+```{r}
+my_cols = c("Purple-Ring Topsnail" = "orchid3", "Red Turban Snail" = "tomato")
+```
+
+```{r}
+ggplot(snailed_it, aes(x = Exposure, y = survival_percent, fill = Species)) + 
+  geom_point(aes(colour = Species), position = position_jitterdodge()) +
+  geom_boxplot(alpha = 0.8) +
+  scale_color_manual(values = my_cols) +
+  scale_fill_manual(values = my_cols)
+```
+
+### Themes
+
+Excellent! One of the easiest ways of making your figures look more professional / less "cookie cutter" is to change the theme. IMO the default ggplot is kind of ugly and I like a cleaner simpler look. There are a few different theme options (many of which are terrible).
+
+```{r}
+ggplot(snailed_it, aes(x = Exposure, y = survival_percent, fill = Species)) + 
+  geom_point(aes(colour = Species), position = position_jitterdodge()) +
+  geom_boxplot(alpha = 0.8) +
+  scale_color_manual(values = my_cols) +
+  scale_fill_manual(values = my_cols) +
+  theme_classic()
+```
+
+### Multiple plots with patchwork
+
+Often you have multiple figures that you want to include in a single panel. Luckily certain packages, like `library(patchwork)` do the job for us! All we have to do is assign the plots in our environment rather than just printing them out. Then, we combine the plots together. For a handy tutorial on how to implement this in various ways check out: <https://gotellilab.github.io/GotelliLabMeetingHacks/NickGotelli/ggplotPatchwork.html>
+
+```{r}
+p1 =
+  ggplot(snailed_it, aes(x = Exposure, y = survival_percent, fill = Species)) + 
+    geom_point(aes(colour = Species), position = position_jitterdodge()) +
+    geom_boxplot(alpha = 0.8) +
+    scale_color_manual(values = my_cols) +
+    scale_fill_manual(values = my_cols)
+
+p2 = 
+  ggplot(snailed_it, aes(x = Exposure, y = survival_percent, fill = Species)) + 
+    geom_point(aes(colour = Species), position = position_jitterdodge()) +
+    geom_boxplot(alpha = 0.8) +
+    scale_color_manual(values = my_cols) +
+    scale_fill_manual(values = my_cols) +
+    theme_bw()
+
+
+
+
+p1 + p2
+```
+
+#### Mini Challenge: Arrangements
+
+1.  Compare 3 different themes of ggplot using patchwork
+
+2.  Arrange your figures so that there are two figures stacked on the first "column" and one full figure in the second.
+
+```{r}
+p1 =
+  ggplot(snailed_it, aes(x = Exposure, y = survival_percent, fill = Species)) + 
+    geom_point(aes(colour = Species), position = position_jitterdodge()) +
+    geom_boxplot(alpha = 0.8) +
+    scale_color_manual(values = my_cols) +
+    scale_fill_manual(values = my_cols)
+
+p2 = 
+  ggplot(snailed_it, aes(x = Exposure, y = survival_percent, fill = Species)) + 
+    geom_point(aes(colour = Species), position = position_jitterdodge()) +
+    geom_boxplot(alpha = 0.8) +
+    scale_color_manual(values = my_cols) +
+    scale_fill_manual(values = my_cols) +
+    theme_bw()
+
+p3 = 
+  ggplot(snailed_it, aes(x = Exposure, y = survival_percent, fill = Species)) + 
+    geom_point(aes(colour = Species), position = position_jitterdodge()) +
+    geom_boxplot(alpha = 0.8) +
+    scale_color_manual(values = my_cols) +
+    scale_fill_manual(values = my_cols) +
+    theme_dark()
+
+(p1 / p2) | p3
+```
+
+*hint* the provided link may be particularly useful!
+
+```{r}
+
+```
+
+### Faceting
+
+This is likely relevant to many of your DS projects. In particular those who have multiple treatment levels. Let's look back at our data really quick to see what we are actually interested in comparing.
+
+```{r}
+head(snailed_it)
+```
+
+One of the best ways to do that is by "faceting" by specific treatments. Lets facet our information by Temperature
+
+```{r}
+ggplot(snailed_it, aes(x = Exposure, y = survival_percent, fill = Species)) + 
+  geom_point(aes(colour = Species), position = position_jitterdodge()) +
+  geom_boxplot(alpha = 0.8) +
+  scale_color_manual(values = my_cols) +
+  scale_fill_manual(values = my_cols) +
+  facet_grid(. ~ Temp) +
+  theme_bw()
+```
+
+facet_grid(. ~ Temp) side by side 
+(Temp ~ .) for horizontal display
+  USEFUL for DS
+
+### Labeling
+
+Labelling axes - ylab("survival percentage") and xlab("Treatment")
+
+
+```{r}
+ggplot(snailed_it, aes(x = Exposure, y = survival_percent, fill = Species)) + 
+  geom_point(aes(colour = Species), position = position_jitterdodge()) +
+  geom_boxplot(alpha = 0.8) +
+  scale_color_manual(values = my_cols) +
+  scale_fill_manual(values = my_cols) +
+  ylab("Survival (%)") +
+  xlab("Treatment Exposure") +
+  facet_grid(. ~ Temp) +
+  theme_bw()
+```
+
+### Saving your plot
+
+You can save your last plot you've made with `last_plot()`. There are many options within `ggsave` as to how to save your plot. I recommend saving files in a vector format (.pdf for example) as these are easier to resize and touch up for different aesthetics in something like Adobe illustrator.
+
+```{r}
+ggsave(plot = last_plot(), filename = "plot.pdf")
+```
+
+You can also save specific plots that are saved on your environment
+
+```{r}
+ggsave(plot = p1, filename = "plot.pdf")
+```
