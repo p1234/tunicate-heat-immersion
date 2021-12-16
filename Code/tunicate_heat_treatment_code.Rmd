@@ -44,7 +44,7 @@ library(here)
 
 ```{r}
 here::here()
-tunidata <- read_csv(here("Data", "tunicate_master.csv"))
+tunidata <- read_csv(here("Data", "tunicate_treatment_rawdata.csv"))
 tunidata$temperature_c <- as.factor(tunidata$temperature_c)
 tunidata$water_type <- as.factor(tunidata$water_type)
 tunidata$exposure_time_s <- as.factor(tunidata$exposure_time_s)
@@ -77,7 +77,9 @@ summary(modrgb)
 Since model is not influenced by random effects, take this out of the model (stepAIC does not work with random effects) and then reduce model
 
 ```{r, warning =FALSE}
-modrgb <- lm(X48hr_rgb ~ exposure_time_s + water_type + temperature_c + exposure_time_s*water_type*temperature_c, family = gaussian, data = tunirgb)
+modrgb <- lm(X48hr_rgb ~ exposure_time_s + water_type + temperature_c + 
+               exposure_time_s*water_type*temperature_c, family = gaussian, 
+             data = tunirgb)
 stepmodrgb <- stepAIC(modrgb, direction = "backward", trace = F)
 formula(stepmodrgb)
 ```
@@ -310,7 +312,7 @@ summary(mod_changeweightv2)
 
 Visualizing Data
 
-```{r}
+```{r, message=FALSE}
 #making a column for the propotion of samples that survived per treatment
 tunisurv<- tunidata%>%
   group_by(temperature_c, water_type)%>%
@@ -319,6 +321,9 @@ tunisurv<- tunidata%>%
 # divided by 10 because each combination of 
 #temperature and water type has 10 data points
 
+```
+
+```{r}
 my_cols = c("freshwater" = "#0072B2", "seawater" = "#E69F00")
 
 #plotting
@@ -398,14 +403,16 @@ dunnTest(survival ~ temperature_c, data = tunidata)
 
 Data Visualization
 
-```{r, warning =FALSE}
+```{r, warning =FALSE, message = FALSE}
 #making a column for proportion of samples attached to the container
 tuniattach<- tunidata%>%
   group_by(temperature_c, water_type)%>%
   summarize(proportion_attached=sum(attachment)/10, sd=sd(attachment), 
             total= n(), SE = sd(attachment)/sqrt(total))
 # divided by 10 because each temperature and water type combination has 10 data points
+```
 
+```{r}
 
 #plotting
 ggplot(tuniattach, aes(x=temperature_c, y=proportion_attached, colour=water_type))+
