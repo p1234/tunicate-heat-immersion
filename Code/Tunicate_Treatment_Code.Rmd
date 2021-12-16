@@ -259,7 +259,8 @@ descdist(tuni_data1$change_wet_weight_3wk)
 Distribution Fitting
 
 ```{r, warning =FALSE}
-fitDist(change_wet_weight_3wk, data = tuni_data1, type = "realline", try.gamlss = T)
+fitDist(change_wet_weight_3wk, data = tuni_data1, type = "realline", 
+        try.gamlss = T)
 #this also gives normal distribution
 ```
 
@@ -351,7 +352,10 @@ fitDist(survival, data = tunidata, type = "binom", try.gamlss = T)
 GAMLSS model
 
 ```{r, warning =FALSE}
-mod_survival <- gamlss(survival ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s + random(as.factor(colony_id)), 
+mod_survival <- gamlss(survival ~ water_type + temperature_c + 
+                         exposure_time_s + 
+                         water_type*temperature_c*exposure_time_s + 
+                         random(as.factor(colony_id)), 
                        family = BI, data = tunidata)
 summary(mod_survival)
 ```
@@ -428,7 +432,10 @@ fitDist(attachment, data = tuni_data1, type = "binom", try.gamlss = T)
 GAMLSS Model
 
 ```{r, warning =FALSE}
-mod <- gamlss(attachment ~ water_type + temperature_c + exposure_time_s + water_type*temperature_c*exposure_time_s, family = BI, data = tuni_data1)
+mod <- gamlss(attachment ~ water_type + temperature_c + 
+                exposure_time_s + 
+                water_type*temperature_c*exposure_time_s, 
+              family = BI, data = tuni_data1)
 summary(mod)
 ```
 
