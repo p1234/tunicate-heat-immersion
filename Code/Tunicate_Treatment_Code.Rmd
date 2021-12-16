@@ -34,6 +34,7 @@ library(FSA)
 library(goft)
 library(MASS)
 library(ordinal)
+library(here)
 ```
 
 ## Analyses and Graphs
@@ -42,7 +43,8 @@ library(ordinal)
 ### Reading in Data
 
 ```{r}
-tunidata <- read.csv("tunicate_master.csv")
+here::here()
+tunidata <- read_csv(here("Data", "tunicate_master.csv"))
 tunidata$temperature_c <- as.factor(tunidata$temperature_c)
 tunidata$water_type <- as.factor(tunidata$water_type)
 tunidata$exposure_time_s <- as.factor(tunidata$exposure_time_s)
